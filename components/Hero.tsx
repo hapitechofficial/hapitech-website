@@ -23,9 +23,9 @@ const Hero = () => {
 
   return (
     <>
-      <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-beige via-orange/5 to-magenta/5 overflow-hidden">
+      <section className="relative w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-beige via-orange/5 to-magenta/5 overflow-hidden">
       {/* Animated Background Shapes */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 w-full h-full">
         <motion.div
           className="absolute top-20 left-10 w-32 h-32 bg-orange rounded-full opacity-20"
           animate={{

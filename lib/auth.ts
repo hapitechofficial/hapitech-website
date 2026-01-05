@@ -9,8 +9,9 @@ export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as any,
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+      allowDangerousEmailAccountLinking: true,
     }),
     CredentialsProvider({
       name: "credentials",
@@ -48,6 +49,10 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  jwt: {
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -57,62 +62,72 @@ export const authOptions: NextAuthOptions = {
       return token
     },
     async session({ session, token }) {
-      if (token) {
+      if (session.user && token) {
         session.user.id = token.id as string
       }
       return session
     },
     async signIn({ user, account, profile }) {
-      // For OAuth providers, ensure user exists in database
-      if (account?.provider === "google") {
-        const existingUser = await prisma.user.findUnique({
-          where: { email: user.email! }
-        })
+      try {
+        // For OAuth providers, ensure user exists in database
+        if (account?.provider === "google") {
+          if (!user.email) {
+            return false
+          }
 
-        if (!existingUser) {
-          // Create user with default credits
-          await prisma.user.create({
-            data: {
-              email: user.email!,
-              name: user.name,
-              image: user.image,
-              credits: 2, // Default free credits
-            }
-          })
-        } else {
-          // Ensure the account is linked
-          const existingAccount = await prisma.account.findUnique({
-            where: {
-              provider_providerAccountId: {
-                provider: account.provider,
-                providerAccountId: account.providerAccountId,
-              }
-            }
+          const existingUser = await prisma.user.findUnique({
+            where: { email: user.email }
           })
 
-          if (!existingAccount) {
-            await prisma.account.create({
+          if (!existingUser) {
+            // Create user with default credits
+            await prisma.user.create({
               data: {
-                userId: existingUser.id,
-                type: account.type,
-                provider: account.provider,
-                providerAccountId: account.providerAccountId,
-                refresh_token: account.refresh_token,
-                access_token: account.access_token,
-                expires_at: account.expires_at,
-                token_type: account.token_type,
-                scope: account.scope,
-                id_token: account.id_token,
-                session_state: account.session_state,
+                email: user.email,
+                name: user.name || "",
+                image: user.image,
+                credits: 2, // Default free credits
               }
             })
+          } else {
+            // Ensure the account is linked
+            const existingAccount = await prisma.account.findUnique({
+              where: {
+                provider_providerAccountId: {
+                  provider: account.provider,
+                  providerAccountId: account.providerAccountId,
+                }
+              }
+            })
+
+            if (!existingAccount && account) {
+              await prisma.account.create({
+                data: {
+                  userId: existingUser.id,
+                  type: account.type,
+                  provider: account.provider,
+                  providerAccountId: account.providerAccountId,
+                  refresh_token: account.refresh_token,
+                  access_token: account.access_token,
+                  expires_at: account.expires_at,
+                  token_type: account.token_type,
+                  scope: account.scope,
+                  id_token: account.id_token,
+                  session_state: account.session_state,
+                }
+              })
+            }
           }
         }
+        return true
+      } catch (error) {
+        console.error("SignIn callback error:", error)
+        return false
       }
-      return true
     }
   },
   pages: {
     signIn: "/auth/login",
+    error: "/auth/login",
   },
 }
