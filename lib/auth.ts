@@ -49,68 +49,22 @@ export const authOptions: NextAuthOptions = {
     })
   ],
   session: {
-    strategy: "jwt",
+    strategy: "database",
     maxAge: 30 * 24 * 60 * 60, // 30 days
     updateAge: 24 * 60 * 60, // Update session every 24 hours
   },
-  jwt: {
-    maxAge: 30 * 24 * 60 * 60, // 30 days
-  },
   callbacks: {
-    async jwt({ token, user, account }) {
-      if (user) {
-        token.id = user.id
-        token.email = user.email
-      }
-      return token
-    },
-    async session({ session, token }) {
-      if (session && session.user && token) {
-        session.user.id = token.id as string
-        session.user.email = token.email as string
+    async session({ session, user }) {
+      if (session && user) {
+        session.user.id = user.id
       }
       return session
     },
     async signIn({ user, account, profile, email, credentials }) {
       try {
-        if (!user.email) {
-          console.error("SignIn: No email provided")
-          return false
-        }
-
-        // For OAuth providers (Google)
-        if (account?.provider === "google") {
+        // For Google OAuth
+        if (account?.provider === "google" && user.email) {
           console.log("SignIn: Processing Google OAuth for email:", user.email)
-          
-          // Check if user exists
-          let dbUser = await prisma.user.findUnique({
-            where: { email: user.email }
-          })
-
-          // If user doesn't exist, create them
-          if (!dbUser) {
-            console.log("SignIn: Creating new user from Google OAuth")
-            dbUser = await prisma.user.create({
-              data: {
-                email: user.email,
-                name: user.name || "",
-                image: user.image,
-                emailVerified: new Date(),
-                credits: 2, // Default free credits
-              }
-            })
-            console.log("SignIn: User created successfully:", dbUser.id)
-          } else {
-            console.log("SignIn: User already exists:", dbUser.id)
-            // Update user image if new one provided
-            if (user.image && user.image !== dbUser.image) {
-              await prisma.user.update({
-                where: { id: dbUser.id },
-                data: { image: user.image }
-              })
-            }
-          }
-
           return true
         }
 
