@@ -23,7 +23,7 @@ const Hero = () => {
 
   return (
     <>
-      <section className="relative w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-beige via-orange/5 to-magenta/5 overflow-hidden">
+      <section className="relative w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-beige via-orange/5 to-magenta/5 md:bg-gradient-to-br md:from-beige md:via-orange/5 md:to-magenta/5 max-md:bg-beige overflow-hidden">
       {/* Animated Background Shapes */}
       <div className="absolute inset-0 w-full h-full hidden sm:block">
         <motion.div
@@ -91,7 +91,7 @@ const Hero = () => {
           transition={{ duration: 0.8 }}
         >
           <motion.h1
-            className="text-4xl sm:text-5xl md:text-7xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-magenta via-orange to-teal bg-clip-text text-transparent leading-tight"
+            className="text-4xl sm:text-5xl md:text-7xl font-bold mb-4 sm:mb-6 md:bg-gradient-to-r md:from-magenta md:via-orange md:to-teal md:bg-clip-text md:text-transparent max-md:text-charcoal leading-tight"
             animate={{ backgroundPosition: ['0%', '100%'] }}
             transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
           >
@@ -100,7 +100,7 @@ const Hero = () => {
         </motion.div>
 
         <motion.p
-          className="text-base sm:text-lg md:text-xl lg:text-2xl text-charcoal mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed"
+          className="text-base sm:text-lg md:text-xl lg:text-2xl text-charcoal mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed font-medium"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
@@ -116,7 +116,7 @@ const Hero = () => {
         >
           <button
             onClick={handleCTAClick}
-            className="bg-gradient-to-r from-orange to-magenta text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-sm sm:text-base md:text-lg hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 w-full sm:w-auto"
+            className="bg-gradient-to-r from-orange to-magenta text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-sm sm:text-base md:text-lg hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 w-full sm:w-auto max-md:shadow-md"
           >
             <Sparkles size={18} className="hidden sm:inline" />
             Create Magic
@@ -124,13 +124,13 @@ const Hero = () => {
           </button>
           <Link
             href="/pricing"
-            className="border-2 border-magenta text-magenta px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-sm sm:text-base md:text-lg hover:bg-magenta hover:text-white transition-all duration-300 w-full sm:w-auto"
+            className="border-2 border-magenta text-magenta px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-sm sm:text-base md:text-lg hover:bg-magenta hover:text-white transition-all duration-300 w-full sm:w-auto max-md:bg-white max-md:shadow-md"
           >
             View Pricing
           </Link>
           <button
             onClick={() => setShowSubscriptionModal(true)}
-            className="bg-gradient-to-r from-teal to-magenta text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-sm sm:text-base md:text-lg hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 w-full sm:w-auto"
+            className="bg-gradient-to-r from-teal to-magenta text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-sm sm:text-base md:text-lg hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 w-full sm:w-auto max-md:shadow-md"
           >
             <Sparkles size={18} className="hidden sm:inline" />
             Get More Access

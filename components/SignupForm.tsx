@@ -33,8 +33,40 @@ export default function SignupForm() {
     setIsLoading(true);
     setError('');
 
+    // Validate form data
+    if (!formData.name.trim()) {
+      setError('Full name is required');
+      setIsLoading(false);
+      return;
+    }
+
+    if (!formData.email.trim()) {
+      setError('Email is required');
+      setIsLoading(false);
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('Please enter a valid email address');
+      setIsLoading(false);
+      return;
+    }
+
+    if (!formData.password) {
+      setError('Password is required');
+      setIsLoading(false);
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters long');
+      setIsLoading(false);
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match.');
+      setError('Passwords do not match');
       setIsLoading(false);
       return;
     }
@@ -46,8 +78,8 @@ export default function SignupForm() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
+          name: formData.name.trim(),
+          email: formData.email.trim().toLowerCase(),
           password: formData.password,
         }),
       });
@@ -59,10 +91,11 @@ export default function SignupForm() {
         // Redirect to login page
         window.location.href = '/auth/login';
       } else {
-        setError(data.error || 'Something went wrong');
+        setError(data.error || 'Failed to create account. Please try again.');
       }
     } catch (error) {
-      setError('Network error. Please try again.');
+      console.error('Signup error:', error);
+      setError('Network error. Please check your connection and try again.');
     } finally {
       setIsLoading(false);
     }

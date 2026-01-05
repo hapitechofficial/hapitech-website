@@ -4,12 +4,25 @@ import { prisma } from "@/lib/prisma"
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, password } = await request.json()
+    const body = await request.json()
+    const { name, email, password } = body
+
+    console.log("Signup attempt for:", email)
 
     // Validate input
     if (!name || !email || !password) {
+      console.error("Missing required fields:", { name: !!name, email: !!email, password: !!password })
       return NextResponse.json(
         { error: "Name, email, and password are required" },
+        { status: 400 }
+      )
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { error: "Invalid email format" },
         { status: 400 }
       )
     }
@@ -27,6 +40,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (existingUser) {
+      console.log("User already exists:", email)
       return NextResponse.json(
         { error: "User with this email already exists" },
         { status: 400 }
@@ -37,6 +51,7 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await bcrypt.hash(password, 12)
 
     // Create user
+    console.log("Creating user in database...")
     const user = await prisma.user.create({
       data: {
         name,
@@ -46,18 +61,42 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    console.log("User created successfully:", user.id)
+
     // Return user without password
     const { password: _, ...userWithoutPassword } = user
 
     return NextResponse.json({
       message: "User created successfully",
       user: userWithoutPassword
-    })
+    }, { status: 201 })
 
   } catch (error) {
     console.error("Signup error:", error)
+    
+    // Better error messages for debugging
+    if (error instanceof Error) {
+      console.error("Error message:", error.message)
+      console.error("Error stack:", error.stack)
+      
+      // Check for specific Prisma errors
+      if (error.message.includes("Unique constraint failed")) {
+        return NextResponse.json(
+          { error: "Email already registered" },
+          { status: 400 }
+        )
+      }
+      
+      if (error.message.includes("Connection refused")) {
+        return NextResponse.json(
+          { error: "Database connection error. Please try again later." },
+          { status: 503 }
+        )
+      }
+    }
+
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Failed to create account. Please try again." },
       { status: 500 }
     )
   }

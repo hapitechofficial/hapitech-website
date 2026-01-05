@@ -29,20 +29,34 @@ export default function LoginForm() {
     setIsLoading(true);
     setError('');
 
+    // Validate form
+    if (!formData.email.trim()) {
+      setError('Email is required');
+      setIsLoading(false);
+      return;
+    }
+
+    if (!formData.password) {
+      setError('Password is required');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const result = await signIn('credentials', {
-        email: formData.email,
+        email: formData.email.trim().toLowerCase(),
         password: formData.password,
         redirect: false,
       });
 
       if (result?.error) {
         setError('Invalid email or password');
-      } else {
+      } else if (result?.ok) {
         // Redirect to poster generator
         router.push('/tools/poster-generator');
       }
     } catch (error) {
+      console.error('Login error:', error);
       setError('Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
