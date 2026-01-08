@@ -11,7 +11,11 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      console.log('Poster API: User not authenticated');
+      return NextResponse.json(
+        { error: 'Unauthorized', message: 'Please sign in to generate posters' },
+        { status: 401 }
+      );
     }
 
     // Check user credits and subscription status
@@ -160,9 +164,28 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error generating poster:', error);
+
+    // Provide more specific error messages
+    let statusCode = 500;
+    let errorMessage = 'Failed to generate poster';
+    let details: string | undefined;
+
+    if (error instanceof Error) {
+      if (error.message.includes('credit')) {
+        statusCode = 402;
+        errorMessage = 'Insufficient credits. Please upgrade or buy credits.';
+      } else if (error.message.includes('limit')) {
+        statusCode = 429;
+        errorMessage = 'Daily generation limit reached.';
+      } else {
+        details = process.env.NODE_ENV === 'development' ? error.message : undefined;
+      }
+    }
+
     return NextResponse.json({
-      error: 'Failed to generate poster. Please try again with different inputs.',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+      error: errorMessage,
+      details,
+      message: 'Please try again with different inputs.'
+    }, { status: statusCode });
   }
 }
