@@ -152,7 +152,7 @@ export default function SignupForm() {
             value={formData.name}
             onChange={handleChange}
             required
-            className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-magenta focus:border-transparent text-sm"
+            className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-magenta focus:border-transparent text-sm placeholder:text-gray-600"
             placeholder="Your full name"
           />
         </div>
@@ -168,7 +168,7 @@ export default function SignupForm() {
             value={formData.email}
             onChange={handleChange}
             required
-            className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-magenta focus:border-transparent text-sm"
+            className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-magenta focus:border-transparent text-sm placeholder:text-gray-600"
             placeholder="your.email@example.com"
           />
         </div>
@@ -185,7 +185,7 @@ export default function SignupForm() {
               value={formData.password}
               onChange={handleChange}
               required
-              className="w-full px-3 sm:px-4 py-2 sm:py-3 pr-10 sm:pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-magenta focus:border-transparent text-sm"
+              className="w-full px-3 sm:px-4 py-2 sm:py-3 pr-10 sm:pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-magenta focus:border-transparent text-sm placeholder:text-gray-600"
               placeholder="Create a password"
             />
             <button
@@ -209,7 +209,7 @@ export default function SignupForm() {
             value={formData.confirmPassword}
             onChange={handleChange}
             required
-            className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-magenta focus:border-transparent text-sm"
+            className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-magenta focus:border-transparent text-sm placeholder:text-gray-600"
             placeholder="Confirm your password"
           />
         </div>
