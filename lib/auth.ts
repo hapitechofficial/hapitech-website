@@ -22,44 +22,65 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         try {
+          // Validate input presence
           if (!credentials?.email || !credentials?.password) {
-            console.log("Missing credentials")
+            console.log("[AUTH] Missing email or password")
             return null
           }
 
-          console.log("Authorizing user:", credentials.email)
+          const normalizedEmail = credentials.email.toLowerCase().trim()
+          console.log("[AUTH] Attempting credentials login for:", normalizedEmail)
 
+          // Query user by email
           const user = await prisma.user.findUnique({
-            where: { email: credentials.email.toLowerCase() }
+            where: { email: normalizedEmail },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              image: true,
+              password: true,
+            }
           })
 
+          // User not found
           if (!user) {
-            console.log("User not found:", credentials.email)
+            console.log("[AUTH] User not found:", normalizedEmail)
             return null
           }
 
+          // User has no password (OAuth-only account)
           if (!user.password) {
-            console.log("User has no password set:", credentials.email)
+            console.log("[AUTH] User has no password set (OAuth-only):", normalizedEmail)
             return null
           }
 
-          const isPasswordValid = await bcrypt.compare(credentials.password, user.password)
+          // Compare password
+          let isPasswordValid = false
+          try {
+            isPasswordValid = await bcrypt.compare(credentials.password, user.password)
+          } catch (bcryptError) {
+            console.error("[AUTH] Bcrypt comparison error:", bcryptError)
+            return null
+          }
 
+          // Password mismatch
           if (!isPasswordValid) {
-            console.log("Password mismatch for user:", credentials.email)
+            console.log("[AUTH] Password mismatch for user:", normalizedEmail)
             return null
           }
 
-          console.log("User authorized successfully:", credentials.email)
-
+          // Success: return minimal user object (NextAuth requires id, email)
+          console.log("[AUTH] Credentials login successful for:", normalizedEmail)
           return {
             id: user.id,
             email: user.email,
-            name: user.name,
-            image: user.image,
+            name: user.name || undefined,
+            image: user.image || undefined,
           }
         } catch (error) {
-          console.error("Authorization error:", error)
+          console.error("[AUTH] Unexpected authorization error:", error)
+          // Never throw in authorize() - always return null on error
           return null
         }
       }

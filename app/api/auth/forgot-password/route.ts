@@ -5,15 +5,24 @@ import { sendPasswordResetEmail } from "@/lib/email"
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { email } = body
+    // Parse request body
+    let body: { email?: string }
+    try {
+      body = await request.json()
+    } catch (parseError) {
+      console.error("[FORGOT_PW] Invalid JSON:", parseError)
+      return NextResponse.json(
+        { success: false, message: "Invalid request body" },
+        { status: 400 }
+      )
+    }
 
-    console.log("Password reset request for:", email)
+    const email = body?.email?.toLowerCase().trim()
 
-    // Validate input
+    // Validate email presence
     if (!email) {
       return NextResponse.json(
-        { error: "Email is required" },
+        { success: false, message: "Email is required" },
         { status: 400 }
       )
     }
@@ -22,57 +31,88 @@ export async function POST(request: NextRequest) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
       return NextResponse.json(
-        { error: "Invalid email format" },
+        { success: false, message: "Invalid email format" },
         { status: 400 }
       )
     }
 
-    // Find user by email
-    const user = await prisma.user.findUnique({
-      where: { email }
-    })
+    console.log("[FORGOT_PW] Password reset requested for:", email)
 
-    // Don't reveal if user exists or not (security best practice)
-    if (!user) {
+    // Find user by email
+    let user
+    try {
+      user = await prisma.user.findUnique({
+        where: { email },
+        select: { id: true, name: true, password: true }
+      })
+    } catch (dbError) {
+      console.error("[FORGOT_PW] Database error:", dbError)
+      // Return generic message for security
       return NextResponse.json({
+        success: true,
         message: "If an account exists with this email, a password reset link will be sent."
       }, { status: 200 })
     }
 
-    // Generate reset token (valid for 1 hour)
+    // Security: Don't reveal if user exists or not
+    if (!user) {
+      console.log("[FORGOT_PW] User not found:", email)
+      return NextResponse.json({
+        success: true,
+        message: "If an account exists with this email, a password reset link will be sent."
+      }, { status: 200 })
+    }
+
+    // Generate secure reset token
     const resetToken = crypto.randomBytes(32).toString("hex")
     const resetTokenHash = crypto.createHash("sha256").update(resetToken).digest("hex")
     const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000) // 1 hour from now
 
-    // Store reset token in database
-    await prisma.user.update({
-      where: { email },
-      data: {
-        resetToken: resetTokenHash,
-        resetTokenExpiry,
-      }
-    })
-
-    // Send email with reset link
-    const resetUrl = `${process.env.NEXTAUTH_URL}/auth/reset-password?token=${resetToken}`
-    
+    // Store hashed token in database
     try {
-      await sendPasswordResetEmail(email, user.name || "User", resetUrl)
-      console.log("Password reset email sent to:", email)
-    } catch (emailError) {
-      console.error("Failed to send email:", emailError)
-      // Don't fail the request if email fails, but log it
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          resetToken: resetTokenHash,
+          resetTokenExpiry,
+        }
+      })
+      console.log("[FORGOT_PW] Reset token stored for:", email)
+    } catch (updateError) {
+      console.error("[FORGOT_PW] Failed to store reset token:", updateError)
+      return NextResponse.json({
+        success: true,
+        message: "If an account exists with this email, a password reset link will be sent."
+      }, { status: 200 })
     }
 
+    // Send password reset email (non-blocking)
+    const resetUrl = `${process.env.NEXTAUTH_URL}/auth/reset-password?token=${resetToken}`
+    
+    if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
+      try {
+        await sendPasswordResetEmail(email, user.name || "User", resetUrl)
+        console.log("[FORGOT_PW] Reset email sent to:", email)
+      } catch (emailError) {
+        console.error("[FORGOT_PW] Email send failed (non-blocking):", emailError)
+        // Don't fail the entire request if email fails - user can retry
+      }
+    } else {
+      console.warn("[FORGOT_PW] Email service not configured - skipping email send")
+    }
+
+    // Always return success (generic message for security)
     return NextResponse.json({
+      success: true,
       message: "If an account exists with this email, a password reset link will be sent."
     }, { status: 200 })
 
   } catch (error) {
-    console.error("Forgot password error:", error)
+    console.error("[FORGOT_PW] Unexpected error:", error)
+    // Return generic message instead of exposing error details
     return NextResponse.json(
-      { error: "Failed to process password reset request" },
-      { status: 500 }
+      { success: true, message: "If an account exists with this email, a password reset link will be sent." },
+      { status: 200 }
     )
   }
 }
