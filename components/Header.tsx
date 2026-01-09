@@ -34,7 +34,7 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white shadow-md sticky top-0 z-40">
+    <header className="bg-white dark:bg-gray-900 shadow-md sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
@@ -48,7 +48,7 @@ const Header = () => {
               <Link
                 key={item.name}
                 href={item.href}
-                className="text-charcoal hover:text-magenta transition-colors"
+                className="text-charcoal dark:text-white hover:text-magenta transition-colors"
               >
                 {item.name}
               </Link>
@@ -96,7 +96,7 @@ const Header = () => {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden text-charcoal hover:text-magenta transition-colors"
+            className="md:hidden text-charcoal dark:text-white hover:text-magenta transition-colors"
             onClick={() => setIsOpen(!isOpen)}
           >
             {isOpen ? <X size={24} /> : <Menu size={24} />}

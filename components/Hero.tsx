@@ -81,7 +81,7 @@ const Hero = () => {
         </div>
         
         {/* Mobile Background - Optimized for Mobile Phones */}
-        <div className="absolute inset-0 w-full h-full sm:hidden bg-gradient-to-b from-beige via-orange/20 to-beige">
+        <div className="absolute inset-0 w-full h-full sm:hidden bg-gradient-to-b from-beige via-orange/20 to-beige dark:from-gray-900 dark:via-orange/5 dark:to-gray-900">
           {/* Mobile animated accent bars */}
           <motion.div
             className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange via-magenta to-teal"
