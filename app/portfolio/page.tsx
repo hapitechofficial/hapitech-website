@@ -1,92 +1,312 @@
-import { Metadata } from 'next';
-import { Video, Image, Music } from 'lucide-react';
+'use client';
 
-export const metadata: Metadata = {
-  title: 'Portfolio - hApItech Creative Work Samples',
-  description: 'Explore our portfolio of AI-generated marketing content including videos, posters, and audio creations.',
-};
+import { Metadata } from 'next';
+import { useState } from 'react';
+import { Play, Image as ImageIcon } from 'lucide-react';
+
+// Note: Metadata is being moved to layout level since we're using client component
 
 const portfolioItems = [
+  // Diwali Festival Content
   {
-    type: 'Video Ad',
-    title: 'Tech Startup Launch Campaign',
-    description: 'Dynamic video advertisement for a cutting-edge tech startup featuring AI-generated animations and compelling storytelling.',
-    icon: Video,
-    category: 'Video Ads',
+    type: 'Video',
+    title: 'Diwali Festival Celebration',
+    category: 'Festival Content',
+    media: '/assets/diwali final gujarat panel.mp4',
+    isVideo: true,
   },
   {
     type: 'Poster',
-    title: 'E-commerce Product Promotion',
-    description: 'Eye-catching poster design for online retail products with vibrant colors and modern typography.',
-    icon: Image,
-    category: 'Poster Ads',
-  },
-  {
-    type: 'Jingle',
-    title: 'Brand Identity Song',
-    description: 'Catchy jingle composition that captures the essence of a luxury fashion brand with memorable melody and lyrics.',
-    icon: Music,
-    category: 'Audio Content',
-  },
-  {
-    type: 'Video Ad',
-    title: 'Health & Wellness Campaign',
-    description: 'Inspirational video series promoting healthy lifestyle choices with calming visuals and motivational messaging.',
-    icon: Video,
-    category: 'Video Ads',
+    title: 'Gold & Purple Diwali Greetings',
+    category: 'Festival Posters',
+    media: '/assets/Gold Modern Dhanteras Instagram Post.png',
+    isVideo: false,
   },
   {
     type: 'Poster',
-    title: 'Event Announcement',
-    description: 'Bold poster design for a major corporate event featuring sleek graphics and clear call-to-action elements.',
-    icon: Image,
-    category: 'Poster Ads',
+    title: 'Blue & Yellow Diwali Celebration',
+    category: 'Festival Posters',
+    media: '/assets/Blue and Yellow Illustrative Happy Diwali Instagram Post.png',
+    isVideo: false,
   },
   {
-    type: 'Jingle',
-    title: 'Product Launch Tune',
-    description: 'Upbeat jingle for a new product release that creates excitement and brand recall through rhythmic composition.',
-    icon: Music,
-    category: 'Audio Content',
+    type: 'Video',
+    title: 'Diwali Song & Luck Video',
+    category: 'Festival Videos',
+    media: '/assets/diwali song video goodluck.mp4',
+    isVideo: true,
+  },
+  // Navratri Content
+  {
+    type: 'Video',
+    title: 'Colorful Navratri Garba Dance',
+    category: 'Festival Content',
+    media: '/assets/Colourful Navratri Festival Garba Dance Video.mp4',
+    isVideo: true,
+  },
+  {
+    type: 'Poster',
+    title: 'Red & Brown Navratri Thumbnail',
+    category: 'Festival Posters',
+    media: '/assets/Red and Brown Traditional Chaitra Navratri YouTube Thumbnail.png',
+    isVideo: false,
+  },
+  {
+    type: 'Poster',
+    title: 'Red & Purple Navratri Festival Banner',
+    category: 'Festival Posters',
+    media: '/assets/Red and Purple Illustrated Navratri Festival Banner Landscape.png',
+    isVideo: false,
+  },
+  {
+    type: 'Poster',
+    title: 'Blue & White Navratri Greeting',
+    category: 'Festival Posters',
+    media: '/assets/Blue and White Illustrated Navratri Greeting Instagram Post.png',
+    isVideo: false,
+  },
+  // Advertisement Videos
+  {
+    type: 'Video',
+    title: 'Professional Ad Campaign',
+    category: 'Advertisement',
+    media: '/assets/FINAL AD.mp4',
+    isVideo: true,
+  },
+  {
+    type: 'Video',
+    title: 'Premium AD Production',
+    category: 'Advertisement',
+    media: '/assets/1st final ad.mp4',
+    isVideo: true,
+  },
+  // Diwali Special Content
+  {
+    type: 'Video',
+    title: 'Red & Yellow Diwali Video',
+    category: 'Festival Videos',
+    media: '/assets/Red and Yellow Illustrative Happy Diwali Video.mp4',
+    isVideo: true,
+  },
+  {
+    type: 'Video',
+    title: 'Purple & Gold Diwali Greetings Video',
+    category: 'Festival Videos',
+    media: '/assets/Purple and Gold Illustrated Diwali Greetings Video.mp4',
+    isVideo: true,
+  },
+  {
+    type: 'Video',
+    title: 'Gold & Purple Mobile Video',
+    category: 'Festival Videos',
+    media: '/assets/Gold and Purple Illustrative Happy Diwali Mobile Video.mp4',
+    isVideo: true,
+  },
+  {
+    type: 'Poster',
+    title: 'Orange & Black Diwali Wishes',
+    category: 'Festival Posters',
+    media: '/assets/Orange and Black Illustrative Happy Diwali Instagram Post.png',
+    isVideo: false,
+  },
+  {
+    type: 'Poster',
+    title: 'Red & Orange Diwali Card',
+    category: 'Festival Posters',
+    media: '/assets/Red and Orange Illustrative Happy Diwali Card.png',
+    isVideo: false,
+  },
+  {
+    type: 'Poster',
+    title: 'Purple & Yellow Diwali Post',
+    category: 'Festival Posters',
+    media: '/assets/Purple Yellow and Orange Simple Happy Diwali Facebook Post.png',
+    isVideo: false,
+  },
+  // Special Videos
+  {
+    type: 'Video',
+    title: 'Jalebi Diwali Oil Production',
+    category: 'Product Videos',
+    media: '/assets/jaleshawar oil diwali video.mp4',
+    isVideo: true,
+  },
+  {
+    type: 'Video',
+    title: 'Gujarat Panel Content',
+    category: 'Regional Content',
+    media: '/assets/Final Hindi Ad of Gujarat Panel.mp4',
+    isVideo: true,
+  },
+  {
+    type: 'Video',
+    title: 'Gujarat Song Production',
+    category: 'Music Videos',
+    media: '/assets/Gujarat Song Voideo.mp4',
+    isVideo: true,
+  },
+  {
+    type: 'Poster',
+    title: 'Gujarat Panel Poster Design',
+    category: 'Regional Content',
+    media: '/assets/gujarat_panel_poster.png',
+    isVideo: false,
+  },
+  {
+    type: 'Video',
+    title: 'Kisan Divas Celebration',
+    category: 'Special Occasions',
+    media: '/assets/kisan diwas.mp4',
+    isVideo: true,
+  },
+  {
+    type: 'Video',
+    title: 'New Year 2026 Welcome Video',
+    category: 'Seasonal Content',
+    media: '/assets/welcome 2026.mp4',
+    isVideo: true,
+  },
+  // Professional Posters
+  {
+    type: 'Poster',
+    title: 'World Class Professional Poster',
+    category: 'Professional Design',
+    media: '/assets/world-class-ad-poster.png',
+    isVideo: false,
+  },
+  {
+    type: 'Poster',
+    title: 'World Class Premium Design 1',
+    category: 'Professional Design',
+    media: '/assets/world-class-ad-poster (4).png',
+    isVideo: false,
+  },
+  {
+    type: 'Poster',
+    title: 'World Class Premium Design 2',
+    category: 'Professional Design',
+    media: '/assets/world-class-ad-poster (5).png',
+    isVideo: false,
+  },
+  {
+    type: 'Poster',
+    title: 'World Class Premium Design 3',
+    category: 'Professional Design',
+    media: '/assets/world-class-ad-poster (6).png',
+    isVideo: false,
   },
 ];
 
 export default function Portfolio() {
+  const [selectedMedia, setSelectedMedia] = useState<any>(null);
+
   return (
-    <div className="min-h-screen bg-beige">
-      <div className="max-w-6xl mx-auto px-4 py-16">
+    <div className="min-h-screen bg-gradient-to-b from-beige via-white to-beige dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="max-w-7xl mx-auto px-4 py-16">
         <h1 className="text-4xl md:text-5xl font-bold text-center mb-4 bg-gradient-to-r from-magenta to-orange bg-clip-text text-transparent">
           Our Portfolio
         </h1>
-        <p className="text-xl text-center text-charcoal mb-12 max-w-2xl mx-auto">
-          Discover the power of AI-driven creativity through our diverse collection of marketing masterpieces.
+        <p className="text-lg md:text-xl text-center text-charcoal dark:text-gray-300 mb-12 max-w-2xl mx-auto">
+          Discover our curated collection of professional marketing masterpieces including festival campaigns, product videos, and premium design work.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {/* Portfolio Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {portfolioItems.map((item, index) => (
             <div
               key={index}
-              className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
+              onClick={() => setSelectedMedia(item)}
+              className="group relative rounded-lg shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer bg-white dark:bg-gray-800"
             >
-              <div className="h-48 bg-gradient-to-br from-magenta to-orange flex items-center justify-center">
-                <item.icon className="w-16 h-16 text-white" />
+              {/* Media Container */}
+              <div className="relative h-56 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 overflow-hidden">
+                {item.isVideo ? (
+                  <>
+                    <video
+                      src={item.media}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
+                      <Play className="w-12 h-12 text-white fill-white opacity-80 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <img
+                      src={item.media}
+                      alt={item.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
+                      <ImageIcon className="w-12 h-12 text-white opacity-80 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </>
+                )}
               </div>
-              <div className="p-6">
-                <div className="text-sm text-teal font-semibold mb-2">{item.category}</div>
-                <h3 className="text-xl font-semibold text-charcoal mb-3">{item.title}</h3>
-                <p className="text-charcoal text-sm leading-relaxed">{item.description}</p>
+
+              {/* Content */}
+              <div className="p-5">
+                <div className="text-xs md:text-sm text-teal font-semibold mb-2 uppercase tracking-wide">
+                  {item.category}
+                </div>
+                <h3 className="text-lg md:text-xl font-bold text-charcoal dark:text-white group-hover:text-magenta transition-colors">
+                  {item.title}
+                </h3>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="text-center mt-12">
-          <p className="text-lg text-charcoal mb-6">
+        {/* Media Modal */}
+        {selectedMedia && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+            <div className="relative bg-white dark:bg-gray-900 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto">
+              {/* Close Button */}
+              <button
+                onClick={() => setSelectedMedia(null)}
+                className="absolute top-4 right-4 bg-magenta text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-orange transition-colors z-10"
+              >
+                ✕
+              </button>
+
+              {/* Media Display */}
+              <div className="bg-black flex items-center justify-center min-h-[400px]">
+                {selectedMedia.isVideo ? (
+                  <video
+                    src={selectedMedia.media}
+                    controls
+                    autoPlay
+                    className="w-full h-auto max-h-[70vh]"
+                  />
+                ) : (
+                  <img
+                    src={selectedMedia.media}
+                    alt={selectedMedia.title}
+                    className="w-full h-auto max-h-[70vh] object-contain"
+                  />
+                )}
+              </div>
+
+              {/* Info */}
+              <div className="p-6">
+                <div className="text-sm text-teal font-semibold mb-2 uppercase">
+                  {selectedMedia.category}
+                </div>
+                <h2 className="text-3xl font-bold text-charcoal dark:text-white mb-4">
+                  {selectedMedia.title}
+                </h2>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="text-center mt-16">
+          <p className="text-lg text-charcoal dark:text-gray-300 mb-6">
             Ready to create something amazing together?
           </p>
           <a
             href="/contact"
-            className="bg-gradient-to-r from-orange to-magenta text-white px-8 py-4 rounded-full font-semibold text-lg hover:shadow-lg transition-all duration-300 inline-block"
+            className="bg-gradient-to-r from-orange to-magenta text-white px-8 py-4 rounded-full font-semibold text-lg hover:shadow-lg hover:scale-105 transition-all duration-300 inline-block"
           >
             Start Your Project
           </a>
