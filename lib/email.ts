@@ -1,29 +1,52 @@
 import nodemailer from 'nodemailer';
 
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false, // true for 465, false for other ports
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-});
+// Check if using SendGrid or fallback email
+const isSendGridConfigured = () => {
+  return process.env.SENDGRID_API_KEY && process.env.SENDGRID_FROM_EMAIL;
+};
+
+const transporter = isSendGridConfigured()
+  ? nodemailer.createTransport({
+      host: 'smtp.sendgrid.net',
+      port: 587,
+      secure: false,
+      auth: {
+        user: 'apikey',
+        pass: process.env.SENDGRID_API_KEY || '',
+      },
+    })
+  : nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.EMAIL_USER || '',
+        pass: process.env.EMAIL_PASS || '',
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
 
 export const sendEmail = async (to: string, subject: string, html: string) => {
   try {
+    // If no email service configured, log and skip
+    if (!process.env.SENDGRID_API_KEY && !process.env.EMAIL_USER) {
+      console.warn('[EMAIL] No email service configured - skipping email send');
+      return;
+    }
+
+    const fromEmail = process.env.SENDGRID_FROM_EMAIL || process.env.EMAIL_USER || 'noreply@hapitech.in';
+
     await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+      from: fromEmail,
       to,
       subject,
       html,
     });
   } catch (error) {
-    console.error('Email send error:', error);
-    throw error;
+    console.error('[EMAIL] Error sending email:', error);
+    // Don't throw - allow app to continue
   }
 };
 

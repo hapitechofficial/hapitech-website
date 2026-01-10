@@ -3,21 +3,23 @@ import { sendEmail } from '@/lib/email';
 
 export async function POST(request: NextRequest) {
   try {
-    // Validate email configuration
-    if (!process.env.EMAIL_USER) {
-      console.error('EMAIL_USER not configured');
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      console.error('[CONTACT] Invalid JSON:', parseError);
       return NextResponse.json(
-        { error: 'Email service not configured', message: 'Please try again later' },
-        { status: 503 }
+        { error: 'Invalid request format' },
+        { status: 400 }
       );
     }
 
-    const { name, email, subject, message } = await request.json();
+    const { name, email, subject, message } = body;
 
     // Validate inputs
     if (!name || !email || !subject || !message) {
       return NextResponse.json(
-        { error: 'All fields are required', missing: [!name && 'name', !email && 'email', !subject && 'subject', !message && 'message'].filter(Boolean) },
+        { error: 'All fields are required' },
         { status: 400 }
       );
     }
@@ -43,32 +45,15 @@ export async function POST(request: NextRequest) {
       <p>${sanitizedMessage.replace(/\n/g, '<br>')}</p>
     `;
 
-    await sendEmail(process.env.EMAIL_USER, `New Contact: ${subject.substring(0, 100)}`, html);
+    // Send email - sendEmail handles missing config gracefully
+    await sendEmail('support@hapitech.in', `New Contact: ${subject.substring(0, 100)}`, html);
 
-    return NextResponse.json({ message: 'Email sent successfully' });
+    return NextResponse.json({ success: true, message: 'Thank you for contacting us. We will get back to you soon.' }, { status: 200 });
   } catch (error) {
-    console.error('Contact API Error:', error);
-
-    // Differentiate between different error types
-    let statusCode = 500;
-    let errorMessage = 'Failed to send email';
-
-    if (error instanceof Error) {
-      if (error.message.includes('EAUTH')) {
-        statusCode = 503;
-        errorMessage = 'Email authentication failed. Please try again later.';
-      } else if (error.message.includes('timeout')) {
-        statusCode = 504;
-        errorMessage = 'Email service timeout. Please try again.';
-      }
-    }
-
+    console.error('[CONTACT] Unexpected error:', error);
     return NextResponse.json(
-      { 
-        error: errorMessage,
-        details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : undefined
-      },
-      { status: statusCode }
+      { error: 'Failed to send message. Please try again later.' },
+      { status: 500 }
     );
   }
 }

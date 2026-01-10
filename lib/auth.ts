@@ -6,7 +6,7 @@ import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 
 export const authOptions: NextAuthOptions = {
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || (process.env.NODE_ENV === 'production' ? undefined : 'dev-secret'),
   adapter: PrismaAdapter(prisma) as any,
   providers: [
     GoogleProvider({
@@ -136,9 +136,25 @@ export const authOptions: NextAuthOptions = {
       }
     },
     async redirect({ url, baseUrl }) {
-      // Always redirect to poster generator after successful signin
-      if (url.startsWith("/")) return `${baseUrl}${url}`
-      else if (new URL(url).origin === baseUrl) return url
+      // Prevent open redirect vulnerability
+      if (!url) return `${baseUrl}/tools/poster-generator`
+      
+      // If it's an internal relative URL, redirect to it
+      if (url.startsWith("/")) {
+        return `${baseUrl}${url}`
+      }
+      
+      // Check if URL is from the same origin
+      try {
+        const urlObj = new URL(url)
+        if (urlObj.origin === baseUrl) {
+          return url
+        }
+      } catch (e) {
+        // Invalid URL, fall through to default
+      }
+      
+      // Default redirect to poster generator
       return `${baseUrl}/tools/poster-generator`
     }
   },

@@ -5,26 +5,26 @@ import Stripe from 'stripe';
 import { prisma } from '@/lib/prisma';
 import { sendEmail } from '@/lib/email';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
 
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
-      console.log('Subscription API: User not authenticated');
+      console.log('[SUBSCRIPTION] User not authenticated');
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Please sign in to subscribe' },
         { status: 401 }
       );
     }
 
-    // Validate Stripe configuration
-    if (!process.env.STRIPE_SECRET_KEY) {
-      console.error('STRIPE_SECRET_KEY not configured');
+    // Guard: If Stripe not configured, return helpful error
+    if (!stripe || !process.env.STRIPE_SECRET_KEY) {
+      console.warn('[SUBSCRIPTION] Stripe not configured');
       return NextResponse.json(
-        { error: 'Payment system not configured', message: 'Please contact support' },
-        { status: 500 }
+        { error: 'Payment system unavailable', message: 'Subscription service is temporarily unavailable. Please try again later.' },
+        { status: 503 }
       );
     }
 

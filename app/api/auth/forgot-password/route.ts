@@ -87,7 +87,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Send password reset email (non-blocking)
-    const resetUrl = `${process.env.NEXTAUTH_URL}/auth/reset-password?token=${resetToken}`
+    const baseUrl = process.env.NEXTAUTH_URL || 'https://hapitech.in';
+    const resetUrl = `${baseUrl}/auth/reset-password?token=${resetToken}`
     
     if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
       try {

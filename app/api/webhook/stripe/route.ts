@@ -3,10 +3,21 @@ import Stripe from 'stripe';
 import { prisma } from '@/lib/prisma';
 import { sendEmail } from '@/lib/email';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+// Guard: Return 200 if Stripe is not configured
+if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
+  console.warn('[STRIPE] Stripe webhook disabled - missing STRIPE_SECRET_KEY or STRIPE_WEBHOOK_SECRET');
+}
+
+const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
+const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 export async function POST(request: NextRequest) {
+  // If Stripe not configured, return 200 OK (prevent errors)
+  if (!stripe || !endpointSecret) {
+    console.warn('[STRIPE] Stripe disabled - returning 200 OK');
+    return NextResponse.json({ success: true, message: 'Stripe disabled' }, { status: 200 });
+  }
+
   const body = await request.text();
   const sig = request.headers.get('stripe-signature')!;
 
@@ -15,7 +26,7 @@ export async function POST(request: NextRequest) {
   try {
     event = stripe.webhooks.constructEvent(body, sig, endpointSecret);
   } catch (err: any) {
-    console.error(`Webhook signature verification failed.`, err.message);
+    console.error('[STRIPE] Webhook signature verification failed:', err.message);
     return NextResponse.json({ error: 'Webhook error' }, { status: 400 });
   }
 
