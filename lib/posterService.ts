@@ -147,10 +147,13 @@ export const generatePoster = async (params: PosterGenerationParams): Promise<st
   }
 
   try {
-    console.log('Calling Google AI API with model gemini-1.5-flash');
+    console.log('Calling Google AI API with model gemini-1.5-pro');
     const response = await ai.models.generateContent({
       model: 'models/gemini-1.5-pro',
-      contents: parts,
+      contents: [{
+        role: 'user',
+        parts: parts,
+      }],
     });
     console.log('AI API response received');
 
