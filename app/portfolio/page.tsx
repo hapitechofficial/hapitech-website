@@ -201,12 +201,12 @@ export default function Portfolio() {
   const [selectedMedia, setSelectedMedia] = useState<any>(null);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-beige via-white to-beige dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-gradient-to-b from-beige via-white to-beige">
       <div className="max-w-7xl mx-auto px-4 py-16">
         <h1 className="text-4xl md:text-5xl font-bold text-center mb-4 bg-gradient-to-r from-magenta to-orange bg-clip-text text-transparent">
           Our Portfolio
         </h1>
-        <p className="text-lg md:text-xl text-center text-charcoal dark:text-gray-300 mb-12 max-w-2xl mx-auto">
+        <p className="text-lg md:text-xl text-center text-charcoal mb-12 max-w-2xl mx-auto">
           Discover our curated collection of professional marketing masterpieces including festival campaigns, product videos, and premium design work.
         </p>
 
@@ -216,10 +216,10 @@ export default function Portfolio() {
             <div
               key={index}
               onClick={() => setSelectedMedia(item)}
-              className="group relative rounded-lg shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer bg-white dark:bg-gray-800"
+              className="group relative rounded-lg shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer bg-white"
             >
               {/* Media Container */}
-              <div className="relative h-56 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 overflow-hidden">
+              <div className="relative h-56 bg-gradient-to-br from-gray-200 to-gray-300 overflow-hidden">
                 {item.isVideo ? (
                   <>
                     <video
@@ -249,7 +249,7 @@ export default function Portfolio() {
                 <div className="text-xs md:text-sm text-teal font-semibold mb-2 uppercase tracking-wide">
                   {item.category}
                 </div>
-                <h3 className="text-lg md:text-xl font-bold text-charcoal dark:text-white group-hover:text-magenta transition-colors">
+                <h3 className="text-lg md:text-xl font-bold text-charcoal group-hover:text-magenta transition-colors">
                   {item.title}
                 </h3>
               </div>
@@ -260,7 +260,7 @@ export default function Portfolio() {
         {/* Media Modal */}
         {selectedMedia && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-            <div className="relative bg-white dark:bg-gray-900 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto">
+            <div className="relative bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto">
               {/* Close Button */}
               <button
                 onClick={() => setSelectedMedia(null)}
@@ -292,7 +292,7 @@ export default function Portfolio() {
                 <div className="text-sm text-teal font-semibold mb-2 uppercase">
                   {selectedMedia.category}
                 </div>
-                <h2 className="text-3xl font-bold text-charcoal dark:text-white mb-4">
+                <h2 className="text-3xl font-bold text-charcoal mb-4">
                   {selectedMedia.title}
                 </h2>
               </div>
@@ -301,7 +301,7 @@ export default function Portfolio() {
         )}
 
         <div className="text-center mt-16">
-          <p className="text-lg text-charcoal dark:text-gray-300 mb-6">
+          <p className="text-lg text-charcoal mb-6">
             Ready to create something amazing together?
           </p>
           <a

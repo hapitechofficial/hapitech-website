@@ -154,9 +154,6 @@ export const generatePoster = async (params: PosterGenerationParams): Promise<st
         role: 'user',
         parts: parts,
       }],
-      generationConfig: {
-        responseModalities: ['image'],
-      },
     });
     console.log('AI API response received');
 

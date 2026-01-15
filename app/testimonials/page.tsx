@@ -54,12 +54,12 @@ export default function Testimonials() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-beige via-white to-beige dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-gradient-to-b from-beige via-white to-beige">
       <div className="max-w-6xl mx-auto px-4 py-16">
         <h1 className="text-4xl md:text-5xl font-bold text-center mb-4 bg-gradient-to-r from-magenta to-orange bg-clip-text text-transparent">
-          User Feedback & Testimonials
+          User Feedback &amp; Testimonials
         </h1>
-        <p className="text-lg md:text-xl text-center text-charcoal dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+        <p className="text-lg md:text-xl text-center text-charcoal mb-8 max-w-2xl mx-auto">
           Real experiences from our valued users. Share your feedback and help us grow!
         </p>
 
@@ -77,17 +77,17 @@ export default function Testimonials() {
         {/* Feedback Form Modal */}
         {showFeedbackForm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-auto p-6 md:p-8 relative">
+            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-auto p-6 md:p-8 relative">
               <button
                 onClick={() => setShowFeedbackForm(false)}
-                className="absolute top-4 right-4 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-2xl"
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"
               >
                 ✕
               </button>
-              <h2 className="text-3xl font-bold text-charcoal dark:text-white mb-2">
+              <h2 className="text-3xl font-bold text-charcoal mb-2">
                 Share Your Feedback
               </h2>
-              <p className="text-charcoal dark:text-gray-300 mb-6">
+              <p className="text-charcoal mb-6">
                 We'd love to hear about your experience with hApItech. Your feedback helps us improve and serve you better!
               </p>
               <FeedbackForm onSuccess={handleFeedbackSuccess} />
@@ -98,15 +98,15 @@ export default function Testimonials() {
         {/* Feedbacks Display */}
         {isLoading ? (
           <div className="flex justify-center items-center py-12">
-            <div className="text-charcoal dark:text-gray-300">
+            <div className="text-charcoal">
               <div className="w-12 h-12 border-4 border-orange border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
               <p>Loading feedbacks...</p>
             </div>
           </div>
         ) : feedbacks.length === 0 ? (
-          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
-            <MessageSquare className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-            <p className="text-xl text-charcoal dark:text-gray-300 mb-4">
+          <div className="text-center py-12 bg-white rounded-lg">
+            <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <p className="text-xl text-charcoal mb-4">
               No feedback yet. Be the first to share your experience!
             </p>
             <button
@@ -121,7 +121,7 @@ export default function Testimonials() {
             {feedbacks.map((feedback) => (
               <div
                 key={feedback.id}
-                className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-300 border-l-4 border-orange"
+                className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-300 border-l-4 border-orange"
               >
                 {/* Rating */}
                 <div className="flex gap-1 mb-3">
@@ -132,28 +132,28 @@ export default function Testimonials() {
                       className={`${
                         i < feedback.rating
                           ? 'fill-orange text-orange'
-                          : 'text-gray-300 dark:text-gray-600'
+                          : 'text-gray-300'
                       }`}
                     />
                   ))}
                 </div>
 
                 {/* Feedback Message */}
-                <p className="text-charcoal dark:text-gray-200 mb-4 leading-relaxed italic">
+                <p className="text-charcoal mb-4 leading-relaxed italic">
                   "{feedback.message}"
                 </p>
 
                 {/* User Info */}
-                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                  <div className="font-semibold text-charcoal dark:text-white">
+                <div className="border-t border-gray-200 pt-4">
+                  <div className="font-semibold text-charcoal">
                     {feedback.name}
                   </div>
                   {feedback.company && (
-                    <div className="text-sm text-teal dark:text-teal/80 font-medium">
+                    <div className="text-sm text-teal font-medium">
                       {feedback.company}
                     </div>
                   )}
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  <div className="text-xs text-gray-500 mt-2">
                     {formatDate(feedback.createdAt)}
                   </div>
                 </div>
@@ -165,7 +165,7 @@ export default function Testimonials() {
         {/* Call to Action */}
         {feedbacks.length > 0 && (
           <div className="text-center mt-16">
-            <p className="text-lg text-charcoal dark:text-gray-300 mb-6">
+            <p className="text-lg text-charcoal mb-6">
               Ready to transform your marketing with hApItech?
             </p>
             <a
