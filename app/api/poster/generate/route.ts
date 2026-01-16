@@ -35,6 +35,7 @@ export async function POST(request: NextRequest) {
 
     // Check daily limit for subscription users (15 posters per day)
     // Free users can only generate 5 posters per day
+    const isSubscribed = user.subscription?.status === 'active';
     const dailyLimit = isSubscribed ? 15 : 5;
 
     const today = new Date();

@@ -44,7 +44,6 @@ export async function POST(request: NextRequest) {
           update: {
             status: 'active',
             planId: plan,
-            stripeId: session.subscription as string,
             currentPeriodStart: new Date(),
             currentPeriodEnd: new Date(Date.now() + (plan === 'yearly' ? 365 : 30) * 24 * 60 * 60 * 1000),
           },
@@ -52,7 +51,7 @@ export async function POST(request: NextRequest) {
             userId,
             status: 'active',
             planId: plan,
-            stripeId: session.subscription as string,
+            razorpayId: session.subscription as string,
             currentPeriodStart: new Date(),
             currentPeriodEnd: new Date(Date.now() + (plan === 'yearly' ? 365 : 30) * 24 * 60 * 60 * 1000),
           },
