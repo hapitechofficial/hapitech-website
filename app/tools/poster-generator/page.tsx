@@ -66,7 +66,7 @@ export default function PosterGenerator() {
     }
   };
 
-  const performGeneration = async (isUpdate: boolean) => {
+  const performGeneration = async (isUpdate: boolean, retryCount = 0) => {
     // Validation: Check for required text fields
     if (!brandName || !description) {
       setError('Please provide a Brand Name and Description.');
@@ -143,12 +143,33 @@ export default function PosterGenerator() {
           setUserCredits(prev => prev - 1);
         }
       } else {
-        const error = await response.json();
-        if (error.upgradeRequired) {
+        const errorData = await response.json();
+        
+        // Handle subscription upgrade required
+        if (errorData.upgradeRequired) {
           setShowSubscriptionModal(true);
-        } else {
-          setError(error.error || 'Failed to generate poster. Please try again.');
+          return;
         }
+
+        // Handle AI generation failure (400) with graceful retry
+        if (response.status === 400) {
+          // Retry once on 400 status (AI generation failure)
+          if (retryCount < 1) {
+            console.log('Poster generation failed, retrying...');
+            // Wait 1 second before retry
+            setTimeout(() => {
+              performGeneration(isUpdate, retryCount + 1);
+            }, 1000);
+            return;
+          } else {
+            // After retry also fails, show friendly message
+            setError("We couldn't generate the poster this time. Please try again with different details.");
+            return;
+          }
+        }
+
+        // Handle other error responses
+        setError(errorData.error || errorData.message || 'Failed to generate poster. Please try again.');
       }
     } catch (err) {
       console.error(err);
