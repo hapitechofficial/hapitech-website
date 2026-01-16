@@ -34,8 +34,10 @@ export async function POST(request: NextRequest) {
     }
 
     const { plan } = await request.json(); // 'monthly' or 'yearly'
+    console.log('[SUBSCRIPTION] Creating order for plan:', plan, 'User:', session.user.id);
 
     if (!plan || !['monthly', 'yearly'].includes(plan)) {
+      console.warn('[SUBSCRIPTION] Invalid plan:', plan);
       return NextResponse.json(
         { error: 'Invalid plan', message: 'Plan must be monthly or yearly' },
         { status: 400 }
@@ -83,6 +85,8 @@ export async function POST(request: NextRequest) {
         },
       });
 
+      console.log('[SUBSCRIPTION] Order created:', order.id);
+
       // Send email notification (non-blocking)
       if (process.env.EMAIL_USER) {
         const html = `
@@ -112,7 +116,7 @@ export async function POST(request: NextRequest) {
         userId: session.user.id,
       });
     } catch (razorpayError) {
-      console.error('Razorpay error:', razorpayError);
+      console.error('[SUBSCRIPTION] Razorpay error:', razorpayError);
       return NextResponse.json(
         { error: 'Failed to create payment order', details: razorpayError instanceof Error ? razorpayError.message : 'Unknown error' },
         { status: 500 }

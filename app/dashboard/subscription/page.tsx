@@ -59,6 +59,7 @@ export default function Subscription() {
   const router = useRouter();
   const [subscription, setSubscription] = useState<UserSubscription | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingPlan, setLoadingPlan] = useState<'monthly' | 'yearly' | null>(null);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -83,6 +84,103 @@ export default function Subscription() {
       console.error('Failed to fetch subscription:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadRazorpayScript = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handleSubscribe = async (plan: 'monthly' | 'yearly') => {
+    setLoadingPlan(plan);
+    try {
+      // Create order
+      const response = await fetch('/api/subscription/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.orderId || !data.keyId) {
+        console.error('[DASHBOARD] Create order failed:', { status: response.status, data });
+        alert(`Error: ${data.error || data.message || 'Failed to create subscription order'}`);
+        setLoadingPlan(null);
+        return;
+      }
+
+      // Load Razorpay script
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        alert('Failed to load payment gateway');
+        setLoadingPlan(null);
+        return;
+      }
+
+      // Open Razorpay checkout
+      const options: any = {
+        key: data.keyId,
+        amount: data.amount,
+        currency: data.currency,
+        order_id: data.orderId,
+        name: 'hApItech',
+        description: `${plan === 'monthly' ? 'Pro' : 'Platinum'} Subscription - 15 posters/day`,
+        prefill: {
+          name: data.userName || '',
+          email: data.userEmail || '',
+        },
+        theme: {
+          color: '#FF6B9D',
+        },
+        handler: async (response: any) => {
+          try {
+            const verifyResponse = await fetch('/api/subscription/verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpaySignature: response.razorpay_signature,
+                plan: plan,
+              }),
+            });
+
+            const verifyData = await verifyResponse.json();
+
+            if (verifyData.success) {
+              // Reload page to refresh subscription status
+              window.location.reload();
+            } else {
+              alert(`Payment verification failed: ${verifyData.error || 'Please contact support.'}`);
+              setLoadingPlan(null);
+            }
+          } catch (error) {
+            console.error('Verification error:', error);
+            alert('Payment verification failed. Please contact support.');
+            setLoadingPlan(null);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setLoadingPlan(null);
+          },
+        },
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      console.error('Subscription error:', error);
+      alert(`Error: ${error instanceof Error ? error.message : 'Failed to create subscription. Please try again.'}`);
+      setLoadingPlan(null);
     }
   };
 
@@ -139,7 +237,11 @@ export default function Subscription() {
                 ))}
               </ul>
               <button
-                disabled={plan.buttonDisabled || (isSubscribed && index !== 0)}
+                onClick={() => {
+                  if (index === 1) handleSubscribe('monthly');
+                  else if (index === 2) handleSubscribe('yearly');
+                }}
+                disabled={plan.buttonDisabled || (isSubscribed && index !== 0) || loadingPlan !== null}
                 className={`w-full py-3 rounded-lg font-semibold transition ${
                   plan.buttonDisabled || (isSubscribed && index !== 0)
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -152,7 +254,7 @@ export default function Subscription() {
                       }`
                 }`}
               >
-                {isSubscribed && index !== 0 ? 'Current Plan' : plan.buttonText}
+                {loadingPlan === 'monthly' && index === 1 ? 'Processing...' : loadingPlan === 'yearly' && index === 2 ? 'Processing...' : isSubscribed && index !== 0 ? 'Current Plan' : plan.buttonText}
               </button>
             </div>
           ))}

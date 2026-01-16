@@ -13,6 +13,7 @@ interface User {
 
 export default function SubscriptionClient({ user }: { user: User | null }) {
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingPlan, setLoadingPlan] = useState<'monthly' | 'yearly' | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const success = searchParams.get('success');
@@ -30,7 +31,7 @@ export default function SubscriptionClient({ user }: { user: User | null }) {
   };
 
   const handleSubscribe = async (plan: 'monthly' | 'yearly') => {
-    setIsLoading(true);
+    setLoadingPlan(plan);
     try {
       // Step 1: Create order on backend
       const response = await fetch('/api/subscription/create', {
@@ -41,17 +42,22 @@ export default function SubscriptionClient({ user }: { user: User | null }) {
 
       const data = await response.json();
 
-      if (!data.orderId || !data.keyId) {
-        alert('Error creating subscription order');
-        setIsLoading(false);
+      if (!response.ok || !data.orderId || !data.keyId) {
+        console.error('[SUBSCRIPTION CLIENT] Create order failed:', {
+          status: response.status,
+          data: data,
+        });
+        alert(`Error: ${data.error || data.message || 'Failed to create subscription order'}`);
+        setLoadingPlan(null);
         return;
       }
 
       // Step 2: Load Razorpay script
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) {
+        console.error('[SUBSCRIPTION CLIENT] Failed to load Razorpay script');
         alert('Failed to load payment gateway');
-        setIsLoading(false);
+        setLoadingPlan(null);
         return;
       }
 
@@ -62,7 +68,7 @@ export default function SubscriptionClient({ user }: { user: User | null }) {
         currency: data.currency,
         order_id: data.orderId,
         name: 'hApItech',
-        description: `${plan === 'monthly' ? 'Monthly' : 'Yearly'} Subscription - 15 posters/day`,
+        description: `${plan === 'monthly' ? 'Pro' : 'Platinum'} Subscription - 15 posters/day`,
         prefill: {
           name: data.userName || '',
           email: data.userEmail || '',
@@ -88,18 +94,22 @@ export default function SubscriptionClient({ user }: { user: User | null }) {
 
             if (verifyData.success) {
               // Payment successful
+              console.log('[SUBSCRIPTION CLIENT] Payment verified successfully');
               router.push('/dashboard/subscription?success=true');
             } else {
-              alert('Payment verification failed. Please contact support.');
+              console.error('[SUBSCRIPTION CLIENT] Verification failed:', verifyData);
+              alert(`Payment verification failed: ${verifyData.error || 'Please contact support.'}`);
+              setLoadingPlan(null);
             }
           } catch (error) {
-            console.error('Verification error:', error);
+            console.error('[SUBSCRIPTION CLIENT] Verification error:', error);
             alert('Payment verification failed. Please contact support.');
+            setLoadingPlan(null);
           }
         },
         modal: {
           ondismiss: () => {
-            setIsLoading(false);
+            setLoadingPlan(null);
           },
         },
       };
@@ -107,9 +117,9 @@ export default function SubscriptionClient({ user }: { user: User | null }) {
       const rzp = new (window as any).Razorpay(options);
       rzp.open();
     } catch (error) {
-      console.error('Subscription error:', error);
-      alert('Error creating subscription. Please try again.');
-      setIsLoading(false);
+      console.error('[SUBSCRIPTION CLIENT] Error:', error);
+      alert(`Error: ${error instanceof Error ? error.message : 'Failed to create subscription. Please try again.'}`);
+      setLoadingPlan(null);
     }
   };
 
@@ -154,10 +164,10 @@ export default function SubscriptionClient({ user }: { user: User | null }) {
                   </ul>
                   <button
                     onClick={() => handleSubscribe('monthly')}
-                    disabled={isLoading}
+                    disabled={loadingPlan !== null}
                     className="w-full bg-gradient-to-r from-orange to-magenta text-white py-3 px-6 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50"
                   >
-                    {isLoading ? 'Processing...' : 'Subscribe Now'}
+                    {loadingPlan === 'monthly' ? 'Processing...' : 'Subscribe Now'}
                   </button>
                 </div>
 
@@ -177,10 +187,10 @@ export default function SubscriptionClient({ user }: { user: User | null }) {
                   </ul>
                   <button
                     onClick={() => handleSubscribe('yearly')}
-                    disabled={isLoading}
+                    disabled={loadingPlan !== null}
                     className="w-full bg-white text-magenta py-3 px-6 rounded-lg font-bold hover:bg-yellow-100 transition-all duration-300 disabled:opacity-50"
                   >
-                    {isLoading ? 'Processing...' : 'Get Platinum'}
+                    {loadingPlan === 'yearly' ? 'Processing...' : 'Get Platinum'}
                   </button>
                 </div>
               </div>

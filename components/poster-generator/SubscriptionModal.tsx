@@ -10,6 +10,7 @@ interface SubscriptionModalProps {
 
 export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingPlan, setLoadingPlan] = useState<'monthly' | 'yearly' | null>(null);
 
   if (!isOpen) return null;
 
@@ -25,7 +26,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
   };
 
   const handleSubscribe = async (plan: 'monthly' | 'yearly') => {
-    setIsLoading(true);
+    setLoadingPlan(plan);
     try {
       // Create order
       const response = await fetch('/api/subscription/create', {
@@ -36,17 +37,23 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
 
       const data = await response.json();
 
-      if (!data.orderId || !data.keyId) {
-        alert('Error creating subscription order');
-        setIsLoading(false);
+      if (!response.ok || !data.orderId || !data.keyId) {
+        console.error('[SUBSCRIPTION] Create order failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          data: data,
+        });
+        alert(`Error: ${data.error || data.message || 'Failed to create subscription order'}`);
+        setLoadingPlan(null);
         return;
       }
 
       // Load Razorpay script
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) {
+        console.error('[SUBSCRIPTION] Failed to load Razorpay script');
         alert('Failed to load payment gateway');
-        setIsLoading(false);
+        setLoadingPlan(null);
         return;
       }
 
@@ -82,16 +89,18 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
 
             if (verifyData.success) {
               // Reload page to refresh subscription status
+              console.log('[SUBSCRIPTION] Payment verified successfully');
               onClose();
               window.location.reload();
             } else {
-              alert('Payment verification failed. Please contact support.');
+              console.error('[SUBSCRIPTION] Payment verification failed:', verifyData);
+              alert(`Payment verification failed: ${verifyData.error || 'Please contact support.'}`);
+              setLoadingPlan(null);
             }
           } catch (error) {
-            console.error('Verification error:', error);
+            console.error('[SUBSCRIPTION] Verification error:', error);
             alert('Payment verification failed. Please contact support.');
-          } finally {
-            setIsLoading(false);
+            setLoadingPlan(null);
           }
         },
         modal: {
@@ -104,9 +113,9 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
       const rzp = new (window as any).Razorpay(options);
       rzp.open();
     } catch (error) {
-      console.error('Subscription error:', error);
-      alert('Error creating subscription. Please try again.');
-      setIsLoading(false);
+      console.error('[SUBSCRIPTION] Error creating subscription:', error);
+      alert(`Error: ${error instanceof Error ? error.message : 'Failed to create subscription. Please try again.'}`);
+      setLoadingPlan(null);
     }
   };
 
@@ -154,10 +163,10 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
 
               <button
                 onClick={() => handleSubscribe('monthly')}
-                disabled={isLoading}
+                disabled={loadingPlan !== null}
                 className="w-full bg-gradient-to-r from-orange to-magenta text-white py-2 px-4 rounded-lg font-medium hover:shadow-lg transition-shadow disabled:opacity-50 text-sm"
               >
-                {isLoading ? 'Processing...' : 'Get Pro'}
+                {loadingPlan === 'monthly' ? 'Processing...' : 'Get Pro'}
               </button>
             </div>
 
@@ -189,10 +198,10 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
 
               <button
                 onClick={() => handleSubscribe('yearly')}
-                disabled={isLoading}
+                disabled={loadingPlan !== null}
                 className="w-full bg-white text-magenta py-2 px-4 rounded-lg font-bold hover:bg-yellow-100 transition-all disabled:opacity-50 text-sm"
               >
-                {isLoading ? 'Processing...' : 'Get Platinum'}
+                {loadingPlan === 'yearly' ? 'Processing...' : 'Get Platinum'}
               </button>
             </div>
           </div>
