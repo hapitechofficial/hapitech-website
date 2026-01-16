@@ -67,8 +67,9 @@ model Subscription {
   id        String   @id @default(cuid())
   userId    String   @unique
   status    String   // active, canceled, past_due
-  planId    String
-  stripeId  String   @unique
+  planId    String   // monthly or yearly
+  razorpayId String  @unique
+  razorpayOrderId String? // Razorpay order ID
   currentPeriodStart DateTime
   currentPeriodEnd   DateTime
   cancelAtPeriodEnd  Boolean  @default(false)

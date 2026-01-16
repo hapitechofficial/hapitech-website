@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import Stripe from 'stripe';
+import Razorpay from 'razorpay';
 import { prisma } from '@/lib/prisma';
 import { sendEmail } from '@/lib/email';
 
-const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
+const razorpay = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET 
+  ? new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    })
+  : null;
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,9 +24,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Guard: If Stripe not configured, return helpful error
-    if (!stripe || !process.env.STRIPE_SECRET_KEY) {
-      console.warn('[SUBSCRIPTION] Stripe not configured');
+    // Guard: If Razorpay not configured, return helpful error
+    if (!razorpay || !process.env.RAZORPAY_KEY_ID) {
+      console.warn('[SUBSCRIPTION] Razorpay not configured');
       return NextResponse.json(
         { error: 'Payment system unavailable', message: 'Subscription service is temporarily unavailable. Please try again later.' },
         { status: 503 }
@@ -37,17 +42,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const priceId = plan === 'yearly'
-      ? process.env.STRIPE_YEARLY_PRICE_ID
-      : process.env.STRIPE_MONTHLY_PRICE_ID;
+    // Prices in paisa (100 paisa = 1 rupee)
+    const amounts = {
+      monthly: 150000, // ₹1,500
+      yearly: 1500000, // ₹15,000
+    };
 
-    if (!priceId) {
-      console.error(`Missing price ID for plan: ${plan}`);
-      return NextResponse.json(
-        { error: 'Price not configured', message: 'Please contact support' },
-        { status: 500 }
-      );
-    }
+    const amount = amounts[plan as keyof typeof amounts];
 
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
@@ -69,21 +70,16 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      const checkoutSession = await stripe.checkout.sessions.create({
-        payment_method_types: ['card'],
-        line_items: [
-          {
-            price: priceId,
-            quantity: 1,
-          },
-        ],
-        mode: 'subscription',
-        success_url: `${process.env.NEXTAUTH_URL}/dashboard/subscription?success=true`,
-        cancel_url: `${process.env.NEXTAUTH_URL}/dashboard/subscription?canceled=true`,
-        customer_email: user.email,
-        metadata: {
+      // Create Razorpay order
+      const order = await razorpay.orders.create({
+        amount: amount, // in paisa
+        currency: 'INR',
+        receipt: `order_${session.user.id}_${Date.now()}`,
+        notes: {
           userId: session.user.id,
-          plan,
+          plan: plan,
+          userEmail: user.email,
+          userName: user.name || 'Unknown',
         },
       });
 
@@ -93,8 +89,8 @@ export async function POST(request: NextRequest) {
           <h2>New Subscription Attempt</h2>
           <p><strong>User:</strong> ${user.name || 'Unknown'} (${user.email})</p>
           <p><strong>Plan:</strong> ${plan}</p>
-          <p><strong>Amount:</strong> ${plan === 'yearly' ? '₹9,999/year' : '₹999/month'}</p>
-          <p>Checkout URL: ${checkoutSession.url}</p>
+          <p><strong>Amount:</strong> ${plan === 'yearly' ? '₹15,000/year' : '₹1,500/month'}</p>
+          <p><strong>Razorpay Order ID:</strong> ${order.id}</p>
         `;
 
         try {
@@ -105,11 +101,20 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      return NextResponse.json({ url: checkoutSession.url });
-    } catch (stripeError) {
-      console.error('Stripe error:', stripeError);
+      return NextResponse.json({ 
+        orderId: order.id,
+        amount: order.amount,
+        currency: order.currency,
+        keyId: process.env.RAZORPAY_KEY_ID,
+        userName: user.name,
+        userEmail: user.email,
+        plan: plan,
+        userId: session.user.id,
+      });
+    } catch (razorpayError) {
+      console.error('Razorpay error:', razorpayError);
       return NextResponse.json(
-        { error: 'Failed to create checkout session', details: stripeError instanceof Error ? stripeError.message : 'Unknown error' },
+        { error: 'Failed to create payment order', details: razorpayError instanceof Error ? razorpayError.message : 'Unknown error' },
         { status: 500 }
       );
     }

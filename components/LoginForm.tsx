@@ -52,8 +52,8 @@ export default function LoginForm() {
       if (result?.error) {
         setError('Invalid email or password');
       } else if (result?.ok) {
-        // Redirect to poster generator
-        router.push('/tools/poster-generator');
+        // Redirect to home
+        router.push('/');
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -64,7 +64,7 @@ export default function LoginForm() {
   };
 
   const handleGoogleSignIn = () => {
-    signIn('google', { callbackUrl: '/tools/poster-generator' });
+    signIn('google', { callbackUrl: '/' });
   };
 
   return (

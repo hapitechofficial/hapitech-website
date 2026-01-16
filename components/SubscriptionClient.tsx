@@ -18,9 +18,21 @@ export default function SubscriptionClient({ user }: { user: User | null }) {
   const success = searchParams.get('success');
   const canceled = searchParams.get('canceled');
 
+  const loadRazorpayScript = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
   const handleSubscribe = async (plan: 'monthly' | 'yearly') => {
     setIsLoading(true);
     try {
+      // Step 1: Create order on backend
       const response = await fetch('/api/subscription/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -29,14 +41,74 @@ export default function SubscriptionClient({ user }: { user: User | null }) {
 
       const data = await response.json();
 
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert('Error creating subscription');
+      if (!data.orderId || !data.keyId) {
+        alert('Error creating subscription order');
+        setIsLoading(false);
+        return;
       }
+
+      // Step 2: Load Razorpay script
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        alert('Failed to load payment gateway');
+        setIsLoading(false);
+        return;
+      }
+
+      // Step 3: Open Razorpay checkout
+      const options: any = {
+        key: data.keyId,
+        amount: data.amount,
+        currency: data.currency,
+        order_id: data.orderId,
+        name: 'hApItech',
+        description: `${plan === 'monthly' ? 'Monthly' : 'Yearly'} Subscription - 15 posters/day`,
+        prefill: {
+          name: data.userName || '',
+          email: data.userEmail || '',
+        },
+        theme: {
+          color: '#FF6B9D',
+        },
+        handler: async (response: any) => {
+          // Step 4: Verify payment on backend
+          try {
+            const verifyResponse = await fetch('/api/subscription/verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpaySignature: response.razorpay_signature,
+                plan: plan,
+              }),
+            });
+
+            const verifyData = await verifyResponse.json();
+
+            if (verifyData.success) {
+              // Payment successful
+              router.push('/dashboard/subscription?success=true');
+            } else {
+              alert('Payment verification failed. Please contact support.');
+            }
+          } catch (error) {
+            console.error('Verification error:', error);
+            alert('Payment verification failed. Please contact support.');
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setIsLoading(false);
+          },
+        },
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
     } catch (error) {
-      alert('Error creating subscription');
-    } finally {
+      console.error('Subscription error:', error);
+      alert('Error creating subscription. Please try again.');
       setIsLoading(false);
     }
   };
@@ -71,11 +143,11 @@ export default function SubscriptionClient({ user }: { user: User | null }) {
               <h2 className="text-2xl font-bold text-charcoal mb-6 text-center">Choose Your Plan</h2>
 
               <div className="grid md:grid-cols-2 gap-6">
-                <div className="border border-gray-200 rounded-lg p-6">
+              <div className="border border-gray-200 rounded-lg p-6">
                   <h3 className="text-xl font-semibold text-charcoal mb-2">Monthly Plan</h3>
-                  <p className="text-3xl font-bold text-magenta mb-4">₹999<span className="text-lg">/month</span></p>
+                  <p className="text-3xl font-bold text-magenta mb-4">₹1,500<span className="text-lg">/month</span></p>
                   <ul className="space-y-2 mb-6">
-                    <li>✓ 5 posters per day</li>
+                    <li>✓ 15 posters per day</li>
                     <li>✓ Priority support</li>
                     <li>✓ Commercial usage</li>
                     <li>✓ High-resolution downloads</li>
@@ -94,10 +166,10 @@ export default function SubscriptionClient({ user }: { user: User | null }) {
                     Best Value
                   </div>
                   <h3 className="text-xl font-semibold text-charcoal mb-2">Yearly Plan</h3>
-                  <p className="text-3xl font-bold text-magenta mb-4">₹9,999<span className="text-lg">/year</span></p>
-                  <p className="text-green-600 font-semibold mb-4">Save 2 months!</p>
+                  <p className="text-3xl font-bold text-magenta mb-4">₹15,000<span className="text-lg">/year</span></p>
+                  <p className="text-green-600 font-semibold mb-4">Save ₹3,000!</p>
                   <ul className="space-y-2 mb-6">
-                    <li>✓ 5 posters per day</li>
+                    <li>✓ 15 posters per day</li>
                     <li>✓ Priority support</li>
                     <li>✓ Commercial usage</li>
                     <li>✓ High-resolution downloads</li>

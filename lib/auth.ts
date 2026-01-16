@@ -137,7 +137,7 @@ export const authOptions: NextAuthOptions = {
     },
     async redirect({ url, baseUrl }) {
       // Prevent open redirect vulnerability
-      if (!url) return `${baseUrl}/tools/poster-generator`
+      if (!url) return `${baseUrl}/`
       
       // If it's an internal relative URL, redirect to it
       if (url.startsWith("/")) {
@@ -154,8 +154,8 @@ export const authOptions: NextAuthOptions = {
         // Invalid URL, fall through to default
       }
       
-      // Default redirect to poster generator
-      return `${baseUrl}/tools/poster-generator`
+      // Default redirect to home page
+      return `${baseUrl}/`
     }
   },
   pages: {

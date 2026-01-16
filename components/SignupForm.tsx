@@ -17,7 +17,7 @@ export default function SignupForm() {
   const [error, setError] = useState('');
 
   const handleGoogleSignUp = () => {
-    signIn('google', { callbackUrl: '/tools/poster-generator' });
+    signIn('google', { callbackUrl: '/' });
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

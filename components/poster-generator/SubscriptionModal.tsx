@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { X } from 'lucide-react';
 
 interface SubscriptionModalProps {
@@ -8,11 +9,105 @@ interface SubscriptionModalProps {
 }
 
 export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
+  const [isLoading, setIsLoading] = useState(false);
+
   if (!isOpen) return null;
 
-  const handleSubscribe = () => {
-    // TODO: Integrate with Stripe
-    alert('Subscription functionality will be implemented with Stripe integration');
+  const loadRazorpayScript = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handleSubscribe = async () => {
+    setIsLoading(true);
+    try {
+      // Create order
+      const response = await fetch('/api/subscription/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: 'monthly' }),
+      });
+
+      const data = await response.json();
+
+      if (!data.orderId || !data.keyId) {
+        alert('Error creating subscription order');
+        setIsLoading(false);
+        return;
+      }
+
+      // Load Razorpay script
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        alert('Failed to load payment gateway');
+        setIsLoading(false);
+        return;
+      }
+
+      // Open Razorpay checkout
+      const options: any = {
+        key: data.keyId,
+        amount: data.amount,
+        currency: data.currency,
+        order_id: data.orderId,
+        name: 'hApItech',
+        description: 'Monthly Subscription - 15 posters/day',
+        prefill: {
+          name: data.userName || '',
+          email: data.userEmail || '',
+        },
+        theme: {
+          color: '#FF6B9D',
+        },
+        handler: async (response: any) => {
+          try {
+            const verifyResponse = await fetch('/api/subscription/verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpaySignature: response.razorpay_signature,
+                plan: 'monthly',
+              }),
+            });
+
+            const verifyData = await verifyResponse.json();
+
+            if (verifyData.success) {
+              // Reload page to refresh subscription status
+              onClose();
+              window.location.reload();
+            } else {
+              alert('Payment verification failed. Please contact support.');
+            }
+          } catch (error) {
+            console.error('Verification error:', error);
+            alert('Payment verification failed. Please contact support.');
+          } finally {
+            setIsLoading(false);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setIsLoading(false);
+          },
+        },
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      console.error('Subscription error:', error);
+      alert('Error creating subscription. Please try again.');
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -39,14 +134,14 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
             <div className="text-center">
               <div className="text-3xl font-bold text-charcoal">₹1,500</div>
               <div className="text-sm text-gray-600">per month</div>
-              <div className="text-sm text-gray-600">Unlimited access</div>
+              <div className="text-sm text-gray-600">15 posters per day</div>
             </div>
           </div>
 
           <div className="space-y-3 mb-6">
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 bg-magenta rounded-full"></div>
-              <span className="text-sm">Unlimited poster generation</span>
+              <span className="text-sm">15 posters per day generation</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 bg-magenta rounded-full"></div>
@@ -64,13 +159,14 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
 
           <button
             onClick={handleSubscribe}
-            className="w-full bg-gradient-to-r from-orange to-magenta text-white py-3 px-6 rounded-lg font-medium hover:shadow-lg transition-shadow"
+            disabled={isLoading}
+            className="w-full bg-gradient-to-r from-orange to-magenta text-white py-3 px-6 rounded-lg font-medium hover:shadow-lg transition-shadow disabled:opacity-50"
           >
-            Subscribe Now - ₹1,500/month
+            {isLoading ? 'Processing...' : 'Subscribe Now - ₹1,500/month'}
           </button>
 
           <p className="text-xs text-gray-500 mt-4">
-            Secure payment powered by Stripe. Cancel anytime.
+            Secure payment powered by Razorpay. Cancel anytime.
           </p>
         </div>
       </div>

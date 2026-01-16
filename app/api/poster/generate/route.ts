@@ -33,34 +33,37 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Check daily limit for subscription users (5 posters per day)
-    const isSubscribed = user.subscription?.status === 'active';
+    // Check daily limit for subscription users (15 posters per day)
+    // Free users can only generate 5 posters per day
+    const dailyLimit = isSubscribed ? 15 : 5;
 
-    if (isSubscribed) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
-      const todayGenerations = await prisma.posterGeneration.count({
-        where: {
-          userId: session.user.id,
-          createdAt: {
-            gte: today,
-            lt: tomorrow,
-          },
-          status: 'completed',
+    const todayGenerations = await prisma.posterGeneration.count({
+      where: {
+        userId: session.user.id,
+        createdAt: {
+          gte: today,
+          lt: tomorrow,
         },
-      });
+        status: 'completed',
+      },
+    });
 
-      if (todayGenerations >= 5) {
-        return NextResponse.json({
-          error: 'You\'ve reached your daily poster generation limit. Upgrade to premium for unlimited access.',
-          upgradeRequired: true
-        }, { status: 402 });
-      }
-    } else if (user.credits <= 0) {
-      return NextResponse.json({ error: 'Insufficient credits' }, { status: 402 });
+    if (todayGenerations >= dailyLimit) {
+      const message = isSubscribed
+        ? `You've reached your daily poster generation limit (15 posters). Please try again tomorrow.`
+        : `You've reached your daily poster generation limit (5 posters). Upgrade to premium for up to 15 posters per day.`;
+      
+      return NextResponse.json({
+        error: message,
+        upgradeRequired: !isSubscribed,
+        dailyLimit: dailyLimit,
+        generatedToday: todayGenerations,
+      }, { status: 402 });
     }
 
     const formData: PosterGenerationParams = await request.json();
