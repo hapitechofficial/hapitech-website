@@ -143,10 +143,10 @@ export default function SubscriptionClient({ user }: { user: User | null }) {
               <h2 className="text-2xl font-bold text-charcoal mb-6 text-center">Choose Your Plan</h2>
 
               <div className="grid md:grid-cols-2 gap-6">
-              <div className="border border-gray-200 rounded-lg p-6">
-                  <h3 className="text-xl font-semibold text-charcoal mb-2">Monthly Plan</h3>
+              <div className="border border-gray-200 rounded-lg p-6 flex flex-col">
+                  <h3 className="text-xl font-semibold text-charcoal mb-2">Pro Plan</h3>
                   <p className="text-3xl font-bold text-magenta mb-4">₹1,500<span className="text-lg">/month</span></p>
-                  <ul className="space-y-2 mb-6">
+                  <ul className="space-y-2 mb-6 flex-grow">
                     <li>✓ 15 posters per day</li>
                     <li>✓ Priority support</li>
                     <li>✓ Commercial usage</li>
@@ -157,29 +157,30 @@ export default function SubscriptionClient({ user }: { user: User | null }) {
                     disabled={isLoading}
                     className="w-full bg-gradient-to-r from-orange to-magenta text-white py-3 px-6 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50"
                   >
-                    {isLoading ? 'Processing...' : 'Subscribe Monthly'}
+                    {isLoading ? 'Processing...' : 'Subscribe Now'}
                   </button>
                 </div>
 
-                <div className="border border-magenta rounded-lg p-6 relative">
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-magenta text-white px-3 py-1 rounded-full text-sm">
-                    Best Value
+                <div className="bg-gradient-to-br from-magenta to-pink-500 rounded-lg p-6 relative flex flex-col transform scale-105 shadow-2xl">
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-charcoal px-4 py-2 rounded-full text-sm font-bold shadow-lg">
+                    ⭐ MOST VALUABLE
                   </div>
-                  <h3 className="text-xl font-semibold text-charcoal mb-2">Yearly Plan</h3>
-                  <p className="text-3xl font-bold text-magenta mb-4">₹15,000<span className="text-lg">/year</span></p>
-                  <p className="text-green-600 font-semibold mb-4">Save ₹3,000!</p>
-                  <ul className="space-y-2 mb-6">
+                  <h3 className="text-xl font-semibold text-white mb-2">Platinum Plan</h3>
+                  <p className="text-3xl font-bold text-white mb-4">₹15,000<span className="text-lg">/year</span></p>
+                  <p className="text-yellow-200 font-semibold mb-4">💰 Save ₹3,000/year!</p>
+                  <ul className="space-y-2 mb-6 flex-grow text-white">
                     <li>✓ 15 posters per day</li>
                     <li>✓ Priority support</li>
                     <li>✓ Commercial usage</li>
                     <li>✓ High-resolution downloads</li>
+                    <li>✓ Best value</li>
                   </ul>
                   <button
                     onClick={() => handleSubscribe('yearly')}
                     disabled={isLoading}
-                    className="w-full bg-gradient-to-r from-orange to-magenta text-white py-3 px-6 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50"
+                    className="w-full bg-white text-magenta py-3 px-6 rounded-lg font-bold hover:bg-yellow-100 transition-all duration-300 disabled:opacity-50"
                   >
-                    {isLoading ? 'Processing...' : 'Subscribe Yearly'}
+                    {isLoading ? 'Processing...' : 'Get Platinum'}
                   </button>
                 </div>
               </div>

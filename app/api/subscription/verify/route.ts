@@ -88,6 +88,17 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Add credits to user based on subscription plan
+    const creditsToAdd = plan === 'yearly' ? 180 : 45; // 180 for yearly (15 per day for 12 months), 45 for monthly (15 per day for 3 months)
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: {
+        credits: {
+          increment: creditsToAdd,
+        },
+      },
+    });
+
     // Send confirmation email
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },

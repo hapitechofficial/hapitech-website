@@ -25,17 +25,32 @@ const plans = [
     buttonDisabled: true,
   },
   {
-    name: 'Premium',
-    price: '$9.99/month',
+    name: 'Pro',
+    price: '₹1,500/month',
     features: [
-      'Unlimited posters',
+      '15 posters per day',
       'Advanced customization',
       'Priority support',
       'Download HD posters',
       'Commercial use rights',
     ],
-    buttonText: 'Upgrade',
+    buttonText: 'Subscribe Pro',
     buttonDisabled: false,
+  },
+  {
+    name: 'Platinum',
+    price: '₹15,000/year',
+    features: [
+      '15 posters per day',
+      'Advanced customization',
+      'Priority support',
+      'Download HD posters',
+      'Commercial use rights',
+      'Save ₹3,000/year',
+    ],
+    buttonText: 'Get Platinum',
+    buttonDisabled: false,
+    mostValuable: true,
   },
 ];
 
@@ -96,19 +111,26 @@ export default function Subscription() {
         </div>
 
         {/* Plans Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
           {plans.map((plan, index) => (
             <div
               key={index}
-              className={`rounded-lg shadow-lg p-8 ${
-                isSubscribed && index === 1
-                  ? 'bg-magenta text-white border-2 border-magenta'
+              className={`rounded-lg shadow-lg p-8 flex flex-col transform transition-all duration-300 ${
+                plan.mostValuable
+                  ? 'bg-gradient-to-br from-magenta to-pink-500 text-white scale-105 -mt-4 shadow-2xl'
+                  : isSubscribed && plan.name === 'Premium'
+                  ? 'bg-magenta text-white'
                   : 'bg-white text-charcoal'
               }`}
             >
+              {plan.mostValuable && (
+                <div className="mb-4 inline-block bg-yellow-400 text-charcoal px-3 py-1 rounded-full text-sm font-bold w-fit">
+                  ⭐ MOST VALUABLE
+                </div>
+              )}
               <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-              <p className="text-3xl font-bold mb-6">{plan.price}</p>
-              <ul className="space-y-4 mb-8">
+              <p className={`text-3xl font-bold mb-6 ${plan.mostValuable ? 'text-white' : 'text-magenta'}`}>{plan.price}</p>
+              <ul className="space-y-4 mb-8 flex-grow">
                 {plan.features.map((feature, i) => (
                   <li key={i} className="flex items-center gap-3">
                     <Check className="w-5 h-5" />
@@ -117,10 +139,12 @@ export default function Subscription() {
                 ))}
               </ul>
               <button
-                disabled={plan.buttonDisabled || (isSubscribed && index === 1)}
+                disabled={plan.buttonDisabled || (isSubscribed && index !== 0)}
                 className={`w-full py-3 rounded-lg font-semibold transition ${
-                  plan.buttonDisabled || (isSubscribed && index === 1)
+                  plan.buttonDisabled || (isSubscribed && index !== 0)
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : plan.mostValuable
+                    ? 'bg-white text-magenta hover:bg-yellow-100 font-bold'
                     : `${
                         isSubscribed && index === 1
                           ? 'bg-white text-magenta hover:bg-gray-100'
@@ -128,7 +152,7 @@ export default function Subscription() {
                       }`
                 }`}
               >
-                {isSubscribed && index === 1 ? 'Current Plan' : plan.buttonText}
+                {isSubscribed && index !== 0 ? 'Current Plan' : plan.buttonText}
               </button>
             </div>
           ))}
