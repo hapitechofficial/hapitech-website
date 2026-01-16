@@ -112,7 +112,34 @@ export async function POST(request: NextRequest) {
       baseImage: formData.baseImage
     };
 
-    const imageBase64 = await generatePoster(posterParams);
+    // SAFE CALL: Wrap AI generation with try/catch for graceful error handling
+    let imageBase64: string;
+    try {
+      imageBase64 = await generatePoster(posterParams);
+      
+      // SAFE VALIDATION: Ensure image was actually generated
+      if (!imageBase64 || imageBase64.trim() === '') {
+        console.error('Poster generation returned empty image');
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'Poster generation failed. Please try again with different inputs.'
+          },
+          { status: 400 }
+        );
+      }
+    } catch (aiError) {
+      console.error('AI generation error:', aiError);
+      
+      // Return controlled error instead of crashing
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Poster generation failed. Please try again with different inputs.'
+        },
+        { status: 400 }
+      );
+    }
 
     // Deduct credits for non-subscribed users
     if (!isSubscribed) {
