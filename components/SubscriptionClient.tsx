@@ -45,7 +45,11 @@ export default function SubscriptionClient({ user }: { user: User | null }) {
       if (!response.ok || !data.orderId || !data.keyId) {
         console.error('[SUBSCRIPTION CLIENT] Create order failed:', {
           status: response.status,
-          data: data,
+          statusText: response.statusText,
+          errorMessage: data.error || data.message,
+          fullResponse: JSON.stringify(data, null, 2),
+          hasOrderId: !!data.orderId,
+          hasKeyId: !!data.keyId,
         });
         alert(`Error: ${data.error || data.message || 'Failed to create subscription order'}`);
         setLoadingPlan(null);

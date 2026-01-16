@@ -111,7 +111,14 @@ export default function Subscription() {
       const data = await response.json();
 
       if (!response.ok || !data.orderId || !data.keyId) {
-        console.error('[DASHBOARD] Create order failed:', { status: response.status, data });
+        console.error('[DASHBOARD] Create order failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorMessage: data.error || data.message,
+          fullResponse: JSON.stringify(data, null, 2),
+          hasOrderId: !!data.orderId,
+          hasKeyId: !!data.keyId,
+        });
         alert(`Error: ${data.error || data.message || 'Failed to create subscription order'}`);
         setLoadingPlan(null);
         return;

@@ -58,6 +58,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user) {
+      console.error('[SUBSCRIPTION] User not found in database:', session.user.id);
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
@@ -65,6 +66,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!user.email) {
+      console.error('[SUBSCRIPTION] User email missing:', session.user.id);
       return NextResponse.json(
         { error: 'User email not found' },
         { status: 400 }
@@ -85,7 +87,13 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      console.log('[SUBSCRIPTION] Order created:', order.id);
+      console.log('[SUBSCRIPTION] Order created successfully:', {
+        orderId: order.id,
+        amount: order.amount,
+        currency: order.currency,
+        userId: session.user.id,
+        plan: plan,
+      });
 
       // Send email notification (non-blocking)
       if (process.env.EMAIL_USER) {
@@ -100,12 +108,12 @@ export async function POST(request: NextRequest) {
         try {
           await sendEmail(process.env.EMAIL_USER, 'New Subscription Attempt', html);
         } catch (emailError) {
-          console.error('Email notification failed (non-blocking):', emailError);
+          console.error('[SUBSCRIPTION] Email notification failed (non-blocking):', emailError);
           // Don't fail the request
         }
       }
 
-      return NextResponse.json({ 
+      const responseData = {
         orderId: order.id,
         amount: order.amount,
         currency: order.currency,
@@ -114,18 +122,43 @@ export async function POST(request: NextRequest) {
         userEmail: user.email,
         plan: plan,
         userId: session.user.id,
+      };
+
+      console.log('[SUBSCRIPTION] Returning success response:', {
+        hasOrderId: !!responseData.orderId,
+        hasKeyId: !!responseData.keyId,
+        orderId: responseData.orderId,
       });
+
+      return NextResponse.json(responseData);
     } catch (razorpayError) {
-      console.error('[SUBSCRIPTION] Razorpay error:', razorpayError);
+      console.error('[SUBSCRIPTION] Razorpay error details:', {
+        errorType: razorpayError instanceof Error ? razorpayError.constructor.name : typeof razorpayError,
+        errorMessage: razorpayError instanceof Error ? razorpayError.message : String(razorpayError),
+        errorStack: razorpayError instanceof Error ? razorpayError.stack : null,
+        fullError: razorpayError,
+      });
       return NextResponse.json(
-        { error: 'Failed to create payment order', details: razorpayError instanceof Error ? razorpayError.message : 'Unknown error' },
+        {
+          error: 'Failed to create payment order',
+          details: razorpayError instanceof Error ? razorpayError.message : 'Unknown error',
+          type: 'RAZORPAY_ERROR',
+        },
         { status: 500 }
       );
     }
   } catch (error) {
-    console.error('Subscription create error:', error);
+    console.error('[SUBSCRIPTION] Unhandled error:', {
+      errorType: error instanceof Error ? error.constructor.name : typeof error,
+      errorMessage: error instanceof Error ? error.message : String(error),
+      errorStack: error instanceof Error ? error.stack : null,
+    });
     return NextResponse.json(
-      { error: 'Failed to create subscription', details: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        error: 'Failed to create subscription',
+        details: error instanceof Error ? error.message : 'Unknown error',
+        type: 'UNKNOWN_ERROR',
+      },
       { status: 500 }
     );
   }

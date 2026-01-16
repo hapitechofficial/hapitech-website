@@ -42,6 +42,8 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
           status: response.status,
           statusText: response.statusText,
           data: data,
+          hasOrderId: !!data.orderId,
+          hasKeyId: !!data.keyId,
         });
         alert(`Error: ${data.error || data.message || 'Failed to create subscription order'}`);
         setLoadingPlan(null);
