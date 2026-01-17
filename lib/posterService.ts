@@ -1,7 +1,11 @@
-import { GoogleGenAI, Modality } from '@google/genai';
+import { GoogleGenAI } from '@google/genai';
 import type { PosterGenerationParams, PosterType } from '@/types/poster';
 
-const buildSystemPrompt = (
+/**
+ * Generate a world-class AI prompt for poster creation
+ * Handles both festive and regular advertisements with premium aesthetic
+ */
+const generateAIPrompt = (
     brandName: string,
     description: string,
     productUrl: string | undefined,
@@ -12,59 +16,34 @@ const buildSystemPrompt = (
     contactPhone: string | undefined,
     website: string | undefined,
     address: string | undefined,
-    isEditing: boolean,
     aspectRatio: string
 ): string => {
+  // Base aesthetic for "World's Greatest Ad Creator" style
+  const stylePrefix = "A world-class, high-end commercial advertisement poster with a premium aesthetic. Professional studio lighting, cinematic composition, and 8k resolution.";
+  
+  // Handling the core content
+  const coreContent = `The advertisement is for a brand called '${brandName}', which focuses on: ${description}.`;
+  
+  // Festive vs. Regular logic
+  const context = posterType === 'Festival' && festivalName
+    ? `The theme is a grand celebration of ${festivalName}. Incorporate elegant festive elements, vibrant colors associated with the occasion, and a joyful, prestigious atmosphere.`
+    : "The theme is modern, minimalist, and corporate. Focus on sleek lines, sophisticated color palettes, and a clear 'call to action' vibe.";
 
-    const sourceContext = productUrl
-        ? `A product URL was provided: ${productUrl}. Use this to infer context about the product style if needed.`
-        : "";
+  // Handling product and logo integration
+  const mediaInstruction = imageCount > 0 && hasLogo
+    ? "Highlight the provided product photo as the focal point and seamlessly integrate the brand logo in a prominent but balanced position."
+    : imageCount > 0
+    ? "Highlight the provided product photo as the central focal point with professional composition."
+    : hasLogo
+    ? "Create a strong visual presence for the provided brand logo and develop a photorealistic representation of the product based on the brand description."
+    : "Generate a photorealistic representation of the product that embodies the brand essence and description.";
 
-    const imageInstruction = imageCount > 0
-        ? `Use the ${imageCount} provided product image(s) as the central focus. Arrange them in a clean, professional grid or hero composition.`
-        : `NO product images were uploaded. You MUST generate a high-quality, photorealistic representation of the product based on the description: "${description}" and the brand name "${brandName}".`;
+  // Handling contact details for text rendering
+  const contactInfo = (contactPhone || website || address)
+    ? `Visually integrate the following contact details in a clean, professional font placed in a footer or corner: ${[contactPhone, website, address].filter(Boolean).join(' | ')}.`
+    : "";
 
-    const logoInstruction = hasLogo
-        ? `Seamlessly integrate the provided brand logo.`
-        : `Create a professional typographic treatment for the brand name "${brandName}".`;
-
-    const themeInstruction = posterType === 'Festival' && festivalName
-        ? `This is a SPECIAL FESTIVAL THEMED POSTER for "${festivalName}".
-           - Integrate specific colors, symbols, and lighting associated with ${festivalName}.
-           - The mood should be celebratory and vibrant.`
-        : `The style should be a modern, clean, and high-end professional commercial advertisement. Focus on minimalism and elegance.`;
-
-    const contactInstruction = (contactPhone || website || address)
-        ? `
-    **Contact Details Placement:**
-    You MUST include the following contact information, placed professionally (e.g., in a footer, bottom strip, or corner) so it is clearly readable:
-    ${contactPhone ? `- Phone: ${contactPhone}` : ''}
-    ${website ? `- Website: ${website}` : ''}
-    ${address ? `- Address: ${address}` : ''}
-    ` : '';
-
-    return `
-You are a world-class advertising agency designer. ${isEditing ? 'Your task is to EDIT the provided poster image.' : 'Create a photorealistic, professional advertisement poster.'}
-The final output must look like a real photograph and professional design.
-
-**Technical Requirements:**
-- **Aspect Ratio:** Generate the image with an aspect ratio of ${aspectRatio} (width:height).
-
-**Input Details:**
-- Brand Name: ${brandName}
-- Description: ${description}
-- ${sourceContext}
-- Mode: ${posterType} ${festivalName ? `(${festivalName})` : ''}
-
-**Instructions:**
-1.  **LANGUAGE:** **IMPORTANT:** ALL generated text, taglines, slogans, and offers MUST BE IN ENGLISH ONLY. Do not use any other language.
-2.  ${isEditing ? 'Keep the existing background, composition, and product placement of the input image EXACTLY as they are. ONLY modify the text overlays to match the new details provided.' : imageInstruction}
-3.  ${isEditing ? 'Ensure the logo remains visible in its current position.' : logoInstruction}
-4.  ${isEditing ? 'Maintain the current theme.' : themeInstruction}
-5.  Create a catchy short **ENGLISH** tagline based on the description${posterType === 'Festival' ? ` and the theme "${festivalName}"` : ''}. Place it elegantly.
-6.  ${contactInstruction}
-7.  **Crucially, avoid any over-saturated, artificial, or "uncanny valley" AI look. The goal is premium realism.**
-`;
+  return `${stylePrefix} ${coreContent} ${context} ${mediaInstruction} ${contactInfo} Aspect ratio: ${aspectRatio}. Ensure the composition looks like a masterpiece from a top-tier global design agency. The final output should have premium realism with no artificial or "uncanny valley" appearance.`;
 };
 
 export const generatePoster = async (params: PosterGenerationParams): Promise<string> => {
@@ -88,9 +67,9 @@ export const generatePoster = async (params: PosterGenerationParams): Promise<st
   }
 
   const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_AI_API_KEY });
-  const isEditing = !!baseImage;
 
-  const textPrompt = buildSystemPrompt(
+  // Generate the world-class prompt
+  const prompt = generateAIPrompt(
       brandName,
       description,
       productUrl,
@@ -101,75 +80,55 @@ export const generatePoster = async (params: PosterGenerationParams): Promise<st
       contactPhone,
       website,
       address,
-      isEditing,
       aspectRatio
   );
 
-  const parts: any[] = [];
-
-  // If editing, input the base image first
-  if (baseImage) {
-      const base64Data = baseImage.split(',')[1]; // Remove data:image/png;base64,
-      const mimeType = baseImage.substring(baseImage.indexOf(':') + 1, baseImage.indexOf(';'));
-
-      parts.push({
-          inlineData: {
-              data: base64Data,
-              mimeType: mimeType,
-          }
-      });
-  }
-
-  parts.push({ text: textPrompt });
-
-  // Only add product images/logo if we are NOT editing (creating from scratch)
-  // If we are editing, the model sees them in the baseImage.
-  if (!isEditing) {
-      for (const base64 of productImages) {
-        const base64Data = base64.replace(/^data:image\/[a-z]+;base64,/, '');
-        parts.push({
-          inlineData: {
-            data: base64Data,
-            mimeType: 'image/jpeg', // Assume jpeg
-          },
-        });
-      }
-
-      if (brandLogo) {
-        const base64Data = brandLogo.replace(/^data:image\/[a-z]+;base64,/, '');
-        parts.push({
-          inlineData: {
-            data: base64Data,
-            mimeType: 'image/png', // Assume png
-          },
-        });
-      }
-  }
-
   try {
-    console.log('Calling Google AI API with model gemini-2.0-flash-exp');
-    const response = await ai.models.generateContent({
-      model: 'models/gemini-2.0-flash-exp',
+    console.log('Calling Google AI API with model gemini-3-pro-image');
+    
+    // Use generateContent with safety settings for image generation
+    const result = await ai.models.generateContent({
+      model: 'models/gemini-3-pro-image',
       contents: [{
         role: 'user',
-        parts: parts,
+        parts: [{ text: prompt }],
       }],
-    });
+      // Type assertion needed for safety settings - available at runtime
+      safetySettings: [
+        {
+          category: 'HARM_CATEGORY_HARASSMENT',
+          threshold: 'BLOCK_ONLY_HIGH',
+        },
+        {
+          category: 'HARM_CATEGORY_HATE_SPEECH',
+          threshold: 'BLOCK_ONLY_HIGH',
+        },
+        {
+          category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+          threshold: 'BLOCK_ONLY_HIGH',
+        },
+        {
+          category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+          threshold: 'BLOCK_ONLY_HIGH',
+        },
+      ],
+    } as any);
+
     console.log('AI API response received');
 
     // SAFE VALIDATION: Check if response exists
-    if (!response) {
+    if (!result) {
       throw new Error('Empty response from API');
     }
 
     // SAFE VALIDATION: Check if candidates exist and have content
-    if (!response.candidates || response.candidates.length === 0) {
-      console.error('No candidates in API response - may be blocked by safety filters');
-      throw new Error('Prompt blocked by safety filters or API constraints. Please try with different content.');
+    if (!result.candidates || result.candidates.length === 0) {
+      console.error('No candidates in API response');
+      throw new Error('No image was generated by the API. The prompt may have been blocked by safety filters.');
     }
 
-    const content = response.candidates[0].content;
-    
+    const content = result.candidates[0].content;
+
     // SAFE VALIDATION: Check if content exists
     if (!content) {
       throw new Error('No content in candidate response');
