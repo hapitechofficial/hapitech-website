@@ -90,7 +90,6 @@ export const generatePoster = async (params: PosterGenerationParams): Promise<st
     const result = await ai.models.generateImages({
       model: 'models/imagen-3.0-generate-002',
       prompt: prompt,
-      aspectRatio: aspectRatio || '3:4',
     });
 
     console.log('Imagen API response received');
