@@ -86,12 +86,16 @@ export const generatePoster = async (params: PosterGenerationParams): Promise<st
   try {
     console.log('Calling Google Imagen API with model imagen-3.0-generate-002');
     
-    // Get the Imagen model from the GenAI client using the correct method
-    const model = ai.getGenerativeModel({ model: 'models/imagen-3.0-generate-002' });
+    // Use the GoogleGenAI SDK's models API to access Imagen
+    const generationConfig = {
+      aspectRatio: aspectRatio || '3:4',
+    };
 
-    // Call the generateImages method
-    const result = await model.generateImages({
+    // Call the generateImages method on the ai.models
+    const result = await (ai as any).generateImages({
+      model: 'models/imagen-3.0-generate-002',
       prompt: prompt,
+      ...generationConfig,
     });
 
     console.log('Imagen API response received');
