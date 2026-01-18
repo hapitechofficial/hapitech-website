@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import type { PosterGenerationParams, PosterType } from '@/types/poster';
 
 /**
@@ -66,7 +66,7 @@ export const generatePoster = async (params: PosterGenerationParams): Promise<st
     throw new Error("GOOGLE_AI_API_KEY environment variable not set");
   }
 
-  const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
+  const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_AI_API_KEY });
 
   // Generate the world-class prompt
   const prompt = generateAIPrompt(
@@ -84,18 +84,17 @@ export const generatePoster = async (params: PosterGenerationParams): Promise<st
   );
 
   try {
-    console.log('Calling Google Gemini API for image generation');
+    console.log('Calling Google Imagen API with model imagen-3.0-generate-002');
     
-    // Get the Imagen model from the GenAI client
-    const model = genAI.getGenerativeModel({ model: 'models/imagen-3.0-generate-002' });
+    // Get the Imagen model from the GenAI client using the correct method
+    const model = ai.getGenerativeModel({ model: 'models/imagen-3.0-generate-002' });
 
     // Call the generateImages method
     const result = await model.generateImages({
       prompt: prompt,
-      aspectRatio: aspectRatio || '3:4',
     });
 
-    console.log('Gemini image generation response received');
+    console.log('Imagen API response received');
 
     // SAFE VALIDATION: Check if response exists
     if (!result) {
@@ -135,7 +134,7 @@ export const generatePoster = async (params: PosterGenerationParams): Promise<st
     const mimeType = 'image/jpeg';
     return `data:${mimeType};base64,${imageBase64}`;
   } catch (apiError) {
-    console.error('Google Gemini API Error:', apiError);
+    console.error('Google Imagen API Error:', apiError);
     const errorMessage = apiError instanceof Error ? apiError.message : 'Unknown API error';
     throw new Error(`AI API Error: ${errorMessage}`);
   }
