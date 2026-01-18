@@ -84,7 +84,7 @@ export const generatePoster = async (params: PosterGenerationParams): Promise<st
   );
 
   try {
-    console.log('Calling Google Imagen API with model imagegeneration@006');
+    console.log('Calling Google Imagen API with model imagegeneration');
     
     // Use the models API to access Imagen with generateImages method
     // Initialize with Imagen model and safety settings
@@ -113,7 +113,7 @@ export const generatePoster = async (params: PosterGenerationParams): Promise<st
 
     // Use generateImages method with Imagen model
     const response = await (ai.models as any).generateImages({
-      model: 'models/imagegeneration@006',
+      model: 'imagegeneration',
       prompt: prompt,
       ...generationConfig,
     });
