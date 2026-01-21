@@ -23,7 +23,7 @@ const Footer = () => {
   };
 
   const socialLinks = [
-    { name: 'Facebook', icon: Facebook, href: 'https://www.facebook.com/profile.php?id=61585315721187' },
+    { name: 'Facebook', icon: Facebook, href: 'https://www.facebook.com/share/1HmXuPhvJJ/' },
     { name: 'Twitter', icon: Twitter, href: 'https://x.com/hApItech_IN?t=jrZ2FwCZZMEXIJ2n9T80Qg&s=09' },
     { name: 'Instagram', icon: Instagram, href: 'https://www.instagram.com/hapitech_official?igsh=MWp2MTd0aXM5c3c4Yg==' },
     { name: 'YouTube', icon: Youtube, href: 'https://youtube.com/@hapitechoffical?si=NMvCuLtaYXjwuQ_C' },
