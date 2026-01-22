@@ -140,7 +140,7 @@ Create a `.env.local` file for environment variables:
 - **Tagline**: "Use Tech Happily with hApItech"
 - **Address**: 3rd Floor, New Bus Port, Palanpur – 385001
 - **Email**: hapitechofficial@gmail.com
-- **Phone**: +95 10314431, +91 7016703159
+- **Phone**: +91 9510314431, +91 7016703159
 
 ## Services
 

@@ -241,7 +241,7 @@ Need a custom quote? Contact us! 📞`;
 
 **📱 Phone/WhatsApp:**
 • +91 7016703159 (Primary)
-• +95 10314431 (International)
+• +91 9510314431 (International)
 
 **🏢 Office Address:**
 • 3rd Floor, New Bus Port

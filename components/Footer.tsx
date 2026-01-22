@@ -43,7 +43,7 @@ const Footer = () => {
             <div className="space-y-2 text-sm">
               <p>📍 3rd Floor, New Bus Port, Palanpur – 385001</p>
               <p>📧 hapitechofficial@gmail.com</p>
-              <p>📞 +95 10314431 | +91 7016703159</p>
+              <p>📞 +91 9510314431 | +91 7016703159</p>
             </div>
           </div>
 
