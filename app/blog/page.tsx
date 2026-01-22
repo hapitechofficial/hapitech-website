@@ -1,64 +1,105 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { Calendar, User } from 'lucide-react';
+import { prisma } from '@/lib/prisma';
 
 export const metadata: Metadata = {
   title: 'Blog - hApItech Marketing Insights',
   description: 'Stay updated with the latest trends in AI marketing, creative strategies, and digital innovation from hApItech.',
 };
 
-const blogPosts = [
+interface BlogPostType {
+  id?: string
+  slug: string
+  title: string
+  excerpt: string
+  author: string
+  content?: string
+  readTime: string
+  createdAt: Date | string
+}
+
+async function getBlogPosts() {
+  try {
+    const posts = await (prisma as any).blogPost.findMany({
+      orderBy: {
+        createdAt: 'desc',
+      },
+    })
+    return posts
+  } catch (error) {
+    console.error('Error fetching blog posts:', error)
+    return []
+  }
+}
+
+// Fallback default posts if database is empty
+const defaultBlogPosts: BlogPostType[] = [
   {
+    id: 'default-1',
     slug: 'ai-marketing-revolution',
     title: 'The AI Marketing Revolution: How Technology is Transforming Creative Industries',
     excerpt: 'Explore how artificial intelligence is reshaping the marketing landscape, from automated content creation to predictive analytics that drive unprecedented results.',
     author: 'hApItech Team',
-    date: '2025-01-15',
+    content: 'Explore how artificial intelligence is reshaping the marketing landscape...',
     readTime: '5 min read',
+    createdAt: new Date('2025-01-15'),
   },
   {
+    id: 'default-2',
     slug: 'future-video-advertising',
     title: 'The Future of Video Advertising: AI-Powered Storytelling',
     excerpt: 'Discover how AI is revolutionizing video content creation, enabling brands to produce compelling narratives at scale while maintaining authenticity and emotional impact.',
     author: 'Marketing Experts',
-    date: '2025-01-10',
+    content: 'Discover how AI is revolutionizing video content creation...',
     readTime: '4 min read',
+    createdAt: new Date('2025-01-10'),
   },
   {
+    id: 'default-3',
     slug: 'poster-design-ai',
     title: 'From Concept to Creation: AI in Poster Design',
     excerpt: 'Learn how artificial intelligence is democratizing design, allowing businesses of all sizes to create professional, eye-catching posters that convert viewers into customers.',
     author: 'Design Team',
-    date: '2025-01-05',
+    content: 'Learn how artificial intelligence is democratizing design...',
     readTime: '3 min read',
+    createdAt: new Date('2025-01-05'),
   },
   {
+    id: 'default-4',
     slug: 'audio-branding-power',
     title: 'The Power of Audio Branding in the Digital Age',
     excerpt: 'Understanding how memorable jingles and audio branding can create lasting connections with audiences in an increasingly visual world.',
     author: 'Audio Specialists',
-    date: '2024-12-28',
+    content: 'Understanding how memorable jingles and audio branding...',
     readTime: '6 min read',
+    createdAt: new Date('2024-12-28'),
   },
   {
+    id: 'default-5',
     slug: 'roi-ai-marketing',
     title: 'Measuring ROI: The True Value of AI Marketing Tools',
     excerpt: 'A comprehensive guide to quantifying the return on investment from AI-powered marketing solutions and strategies for maximizing your marketing budget.',
     author: 'Analytics Team',
-    date: '2024-12-20',
+    content: 'A comprehensive guide to quantifying the return on investment...',
     readTime: '7 min read',
+    createdAt: new Date('2024-12-20'),
   },
   {
+    id: 'default-6',
     slug: 'creative-automation',
     title: 'Creative Automation: Balancing AI Efficiency with Human Touch',
     excerpt: 'How to leverage AI tools while maintaining the authentic human creativity that resonates with audiences and builds genuine brand connections.',
     author: 'Strategy Consultants',
-    date: '2024-12-15',
+    content: 'How to leverage AI tools while maintaining the authentic human creativity...',
     readTime: '5 min read',
+    createdAt: new Date('2024-12-15'),
   },
-];
+]
 
-export default function Blog() {
+export default async function Blog() {
+  const blogPosts = await getBlogPosts()
+  const postsToDisplay: BlogPostType[] = blogPosts.length > 0 ? blogPosts : defaultBlogPosts
   return (
     <div className="min-h-screen bg-beige">
       <div className="max-w-6xl mx-auto px-4 py-16">
@@ -70,15 +111,15 @@ export default function Blog() {
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {blogPosts.map((post, index) => (
+          {postsToDisplay.map((post) => (
             <article
-              key={index}
+              key={post.id || post.slug}
               className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
             >
               <div className="h-48 bg-gradient-to-br from-magenta to-orange flex items-center justify-center">
                 <div className="text-white text-center">
-                  <div className="text-4xl font-bold">{post.date.split('-')[2]}</div>
-                  <div className="text-sm uppercase">{new Date(post.date).toLocaleDateString('en-US', { month: 'short' })}</div>
+                  <div className="text-4xl font-bold">{new Date(post.createdAt).getDate()}</div>
+                  <div className="text-sm uppercase">{new Date(post.createdAt).toLocaleDateString('en-US', { month: 'short' })}</div>
                 </div>
               </div>
               <div className="p-6">

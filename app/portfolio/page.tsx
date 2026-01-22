@@ -1,14 +1,14 @@
 'use client';
 
-import { Metadata } from 'next';
-import { useState } from 'react';
-import { Play, Image as ImageIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Play, Image as ImageIcon, Music } from 'lucide-react';
+import { prisma } from '@/lib/prisma';
 
-// Note: Metadata is being moved to layout level since we're using client component
-
-const portfolioItems = [
+// Default portfolio items as fallback
+const defaultPortfolioItems = [
   // Diwali Festival Content
   {
+    id: 'default-1',
     type: 'Video',
     title: 'Diwali Festival Celebration',
     category: 'Festival Content',
@@ -16,6 +16,7 @@ const portfolioItems = [
     isVideo: true,
   },
   {
+    id: 'default-2',
     type: 'Poster',
     title: 'Gold & Purple Diwali Greetings',
     category: 'Festival Posters',
@@ -23,6 +24,7 @@ const portfolioItems = [
     isVideo: false,
   },
   {
+    id: 'default-3',
     type: 'Poster',
     title: 'Blue & Yellow Diwali Celebration',
     category: 'Festival Posters',
@@ -30,6 +32,7 @@ const portfolioItems = [
     isVideo: false,
   },
   {
+    id: 'default-4',
     type: 'Video',
     title: 'Diwali Song & Luck Video',
     category: 'Festival Videos',
@@ -38,6 +41,7 @@ const portfolioItems = [
   },
   // Navratri Content
   {
+    id: 'default-5',
     type: 'Video',
     title: 'Colorful Navratri Garba Dance',
     category: 'Festival Content',
@@ -45,6 +49,7 @@ const portfolioItems = [
     isVideo: true,
   },
   {
+    id: 'default-6',
     type: 'Poster',
     title: 'Red & Brown Navratri Thumbnail',
     category: 'Festival Posters',
@@ -199,6 +204,36 @@ const portfolioItems = [
 
 export default function Portfolio() {
   const [selectedMedia, setSelectedMedia] = useState<any>(null);
+  const [items, setItems] = useState(defaultPortfolioItems);
+
+  useEffect(() => {
+    // Fetch portfolio items from API
+    const fetchItems = async () => {
+      try {
+        const response = await fetch('/api/admin/portfolio/items');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.length > 0) {
+            // Map database items to expected format
+            const formattedItems = data.map((item: any) => ({
+              id: item.id,
+              title: item.title,
+              category: item.category,
+              type: item.type,
+              media: item.media,
+              isVideo: item.type.toLowerCase() === 'video',
+            }));
+            setItems(formattedItems);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching portfolio items:', error);
+        // Use default items on error
+      }
+    };
+
+    fetchItems();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-beige via-white to-beige">
@@ -212,9 +247,9 @@ export default function Portfolio() {
 
         {/* Portfolio Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {portfolioItems.map((item, index) => (
+          {items.map((item) => (
             <div
-              key={index}
+              key={item.id}
               onClick={() => setSelectedMedia(item)}
               className="group relative rounded-lg shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer bg-white"
             >
