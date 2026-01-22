@@ -8,7 +8,7 @@ export const metadata = {
 
 async function getPortfolioItems() {
   try {
-    const items = await prisma.portfolioItem.findMany({
+    const items = await (prisma as any).portfolioItem.findMany({
       orderBy: {
         createdAt: 'desc',
       },

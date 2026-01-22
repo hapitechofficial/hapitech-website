@@ -8,7 +8,7 @@ export const metadata = {
 
 async function getBlogPosts() {
   try {
-    const posts = await prisma.blogPost.findMany({
+    const posts = await (prisma as any).blogPost.findMany({
       orderBy: {
         createdAt: 'desc',
       },

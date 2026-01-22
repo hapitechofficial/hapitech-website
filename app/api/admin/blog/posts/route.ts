@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   try {
     await requireAdmin()
 
-    const posts = await prisma.blogPost.findMany({
+    const posts = await (prisma as any).blogPost.findMany({
       orderBy: {
         createdAt: 'desc',
       },

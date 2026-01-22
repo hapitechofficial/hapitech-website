@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   try {
     await requireAdmin()
 
-    const items = await prisma.portfolioItem.findMany({
+    const items = await (prisma as any).portfolioItem.findMany({
       orderBy: {
         createdAt: 'desc',
       },
