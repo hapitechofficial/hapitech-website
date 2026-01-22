@@ -40,6 +40,7 @@ export const authOptions: NextAuthOptions = {
               name: true,
               image: true,
               password: true,
+              role: true,
             }
           })
 
@@ -77,6 +78,7 @@ export const authOptions: NextAuthOptions = {
             email: user.email,
             name: user.name || undefined,
             image: user.image || undefined,
+            role: user.role,
           }
         } catch (error) {
           console.error("[AUTH] Unexpected authorization error:", error)
@@ -101,6 +103,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id
         token.email = user.email
         token.name = user.name
+        token.role = (user as any).role || "USER"
       }
       if (account) {
         token.provider = account.provider
@@ -112,6 +115,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string
         session.user.email = token.email as string
         session.user.name = token.name as string
+        ;(session.user as any).role = token.role as string
       }
       return session
     },

@@ -10,6 +10,11 @@ datasource db {
   url = env("DATABASE_URL")
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -44,6 +49,7 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String?
+  role          Role      @default(USER)
   credits       Int       @default(2) // Start with 2 free credits
   subscription  Subscription?
   accounts      Account[]
@@ -109,3 +115,26 @@ model Feedback {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model BlogPost {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  excerpt   String
+  content   String
+  author    String   @default("hApItech Team")
+  readTime  String   @default("5 min read")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PortfolioItem {
+  id        String   @id @default(cuid())
+  title     String
+  category  String
+  type      String   // video, poster
+  media     String   // URL to video or image
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
