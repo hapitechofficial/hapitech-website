@@ -237,7 +237,7 @@ export default function PosterGenerator() {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <BackButton href="/dashboard/tools" />
+              <BackButton href="/tools" />
               <div className="text-sm text-gray-600">
                 {!selectedSize ? 'Select Format' : 'Design Poster'}
               </div>

@@ -84,15 +84,15 @@ export const generatePoster = async (params: PosterGenerationParams): Promise<st
   );
 
   try {
-    console.log('Calling Google Imagen API with model imagen-3.0-generate-002');
+    console.log('Calling Google Gemini API with model gemini-3-pro-image');
     
     // Use the GoogleGenAI SDK's correct API for image generation
     const result = await ai.models.generateImages({
-      model: 'models/imagen-3.0-generate-002',
+      model: 'models/gemini-3-pro-image',
       prompt: prompt,
     });
 
-    console.log('Imagen API response received');
+    console.log('Gemini API response received');
 
     // SAFE VALIDATION: Check if response exists
     if (!result) {
@@ -134,7 +134,7 @@ export const generatePoster = async (params: PosterGenerationParams): Promise<st
     const mimeType = 'image/jpeg';
     return `data:${mimeType};base64,${imageBase64}`;
   } catch (apiError) {
-    console.error('Google Imagen API Error:', apiError);
+    console.error('Google Gemini API Error:', apiError);
     const errorMessage = apiError instanceof Error ? apiError.message : 'Unknown API error';
     throw new Error(`AI API Error: ${errorMessage}`);
   }
