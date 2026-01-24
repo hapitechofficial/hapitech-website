@@ -84,11 +84,11 @@ export const generatePoster = async (params: PosterGenerationParams): Promise<st
   );
 
   try {
-    console.log('Calling Google Gemini API with model gemini-3-pro-image');
+    console.log('Calling Google Gemini API with model imagen-3.0-generate-001');
     
     // Use the GoogleGenAI SDK's correct API for image generation
     const result = await ai.models.generateImages({
-      model: 'models/gemini-3-pro-image',
+      model: 'models/imagen-3.0-generate-001',
       prompt: prompt,
     });
 
