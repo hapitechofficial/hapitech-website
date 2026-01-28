@@ -66,7 +66,7 @@ export default function PosterGenerator() {
     }
   };
 
-  const performGeneration = async (isUpdate: boolean, retryCount = 0) => {
+  const performGeneration = async (isUpdate: boolean) => {
     // Validation: Check for required text fields
     if (!brandName || !description) {
       setError('Please provide a Brand Name and Description.');
@@ -151,29 +151,13 @@ export default function PosterGenerator() {
           return;
         }
 
-        // Handle AI generation failure (400) with graceful retry
-        if (response.status === 400) {
-          // Retry once on 400 status (AI generation failure)
-          if (retryCount < 1) {
-            console.log('Poster generation failed, retrying...');
-            // Wait 1 second before retry
-            setTimeout(() => {
-              performGeneration(isUpdate, retryCount + 1);
-            }, 1000);
-            return;
-          } else {
-            // After retry also fails, show friendly message
-            setError("We couldn't generate the poster this time. Please try again with different details.");
-            return;
-          }
-        }
-
-        // Handle other error responses
-        setError(errorData.error || errorData.message || 'Failed to generate poster. Please try again.');
+        // Handle any error response (single attempt, no retry)
+        // Show user-friendly message from API or fallback message
+        setError(errorData.message || errorData.error || 'We encountered an issue while creating your poster. Please try again shortly.');
       }
     } catch (err) {
       console.error(err);
-      setError('Failed to generate poster. Please try again.');
+      setError('We encountered an issue while creating your poster. Please try again shortly.');
     } finally {
       setIsLoading(false);
     }

@@ -42,10 +42,14 @@ const PosterDisplay: React.FC<PosterDisplayProps> = ({ generatedImage, isLoading
         {isLoading && <LoadingState />}
 
         {error && !isLoading && (
-          <div className="text-center text-red-400 p-8">
+          <div className="text-center p-8 space-y-4">
             <WarningIcon />
-            <h3 className="mt-4 text-lg font-semibold text-white">Oops! Something went wrong.</h3>
-            <p className="mt-2 text-sm text-red-300">{error}</p>
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold text-white">Thank you for choosing Hapitech!</h3>
+              <p className="text-sm text-gray-300">We are sorry, we are experiencing a little bit of trouble on our end.</p>
+              <p className="text-sm text-gray-300">{error}</p>
+              <p className="text-xs text-gray-400 mt-3">Please try again in a few moments. We're working to improve your experience.</p>
+            </div>
           </div>
         )}
 
