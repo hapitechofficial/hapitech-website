@@ -1,76 +1,209 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, Type } from '@google/genai';
 import type { PosterGenerationParams, PosterType } from '@/types/poster';
 
+interface AdStrategy {
+  headline: string;
+  subtext: string;
+  cta: string;
+  visualConcept: string;
+  colorPalette: string[];
+  layoutType: string;
+}
+
 /**
- * Generate a world-class AI prompt for poster creation
- * Handles both festive and regular advertisements with premium aesthetic
+ * Analyze brand and create ad strategy using Gemini
  */
-const generateAIPrompt = (
-    brandName: string,
-    description: string,
-    productUrl: string | undefined,
-    imageCount: number,
-    hasLogo: boolean,
-    posterType: PosterType,
-    festivalName: string | undefined,
-    contactPhone: string | undefined,
-    website: string | undefined,
-    address: string | undefined,
-    aspectRatio: string
-): string => {
-  // Base aesthetic for "World's Greatest Ad Creator" style
-  const stylePrefix = "A world-class, high-end commercial advertisement poster with a premium aesthetic. Professional studio lighting, cinematic composition, and 8k resolution.";
+const analyzeBrand = async (
+  brandName: string,
+  description: string,
+  industry: string,
+  language: string = 'English'
+): Promise<AdStrategy> => {
+  if (!process.env.GOOGLE_AI_API_KEY) {
+    throw new Error("GOOGLE_AI_API_KEY environment variable not set");
+  }
+
+  const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_AI_API_KEY });
+
+  const prompt = `
+    Act as a Senior Creative Director at a top advertising agency. 
+    Analyze the following brand info and create a professional advertising strategy for a high-impact poster.
+    
+    Brand Name: ${brandName}
+    Industry: ${industry}
+    Brand Description: ${description}
+    Target Language: ${language}
+    
+    The strategy must include:
+    1. A powerful, short headline (max 5 words).
+    2. A supporting subtext (max 10 words).
+    3. A clear Call to Action in ${language}.
+    4. A visual concept description for a professional poster.
+    5. A professional color palette (3-4 hex codes).
+    6. Layout type (Minimal, Cinematic, Corporate, Lifestyle, etc.).
+
+    Ensure the tone is sophisticated and matches the industry standards.
+    Focus on creating a premium, high-end advertising strategy.
+  `;
+
+  const response = await ai.models.generateContent({
+    model: 'models/gemini-2.0-flash',
+    contents: [{
+      role: 'user',
+      parts: [{ text: prompt }]
+    }],
+  } as any);
+
+  if (!response.candidates || response.candidates.length === 0) {
+    throw new Error('Failed to analyze brand strategy');
+  }
+
+  const responseText = (response.candidates[0].content?.parts?.[0] as any)?.text || '';
   
-  // Handling the core content
-  const coreContent = `The advertisement is for a brand called '${brandName}', which focuses on: ${description}.`;
-  
-  // Festive vs. Regular logic
-  const context = posterType === 'Festival' && festivalName
-    ? `The theme is a grand celebration of ${festivalName}. Incorporate elegant festive elements, vibrant colors associated with the occasion, and a joyful, prestigious atmosphere.`
-    : "The theme is modern, minimalist, and corporate. Focus on sleek lines, sophisticated color palettes, and a clear 'call to action' vibe.";
-
-  // Handling product and logo integration
-  const mediaInstruction = imageCount > 0 && hasLogo
-    ? "Highlight the provided product photo as the focal point and seamlessly integrate the brand logo in a prominent but balanced position."
-    : imageCount > 0
-    ? "Highlight the provided product photo as the central focal point with professional composition."
-    : hasLogo
-    ? "Create a strong visual presence for the provided brand logo and develop a photorealistic representation of the product based on the brand description."
-    : "Generate a photorealistic representation of the product that embodies the brand essence and description.";
-
-  // Handling contact details for text rendering
-  const contactInfo = (contactPhone || website || address)
-    ? `Visually integrate the following contact details in a clean, professional font placed in a footer or corner: ${[contactPhone, website, address].filter(Boolean).join(' | ')}.`
-    : "";
-
-  return `${stylePrefix} ${coreContent} ${context} ${mediaInstruction} ${contactInfo} Aspect ratio: ${aspectRatio}. Ensure the composition looks like a masterpiece from a top-tier global design agency. The final output should have premium realism with no artificial or "uncanny valley" appearance.`;
+  // Parse JSON response
+  try {
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('No JSON found in response');
+    }
+    return JSON.parse(jsonMatch[0]) as AdStrategy;
+  } catch (parseError) {
+    console.error('Failed to parse strategy response:', responseText);
+    // Fallback strategy
+    return {
+      headline: brandName,
+      subtext: description.substring(0, 50),
+      cta: 'Discover Now',
+      visualConcept: `A premium, professional representation of ${brandName} in a cinematic setting`,
+      colorPalette: ['#1a1a2e', '#16213e', '#0f3460', '#e94560'],
+      layoutType: 'Cinematic'
+    };
+  }
 };
 
 /**
- * Simple canvas-based poster generator as fallback when API generation isn't available
+ * Create poster image using Gemini with visual concept
+ */
+const createPosterImage = async (
+  brandName: string,
+  strategy: AdStrategy,
+  productImages: string[],
+  brandLogo: string | null
+): Promise<string> => {
+  if (!process.env.GOOGLE_AI_API_KEY) {
+    throw new Error("GOOGLE_AI_API_KEY environment variable not set");
+  }
+
+  const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_AI_API_KEY });
+
+  const prompt = `
+    Create a professional, agency-grade commercial advertising poster.
+    
+    VISUAL CONCEPT: ${strategy.visualConcept}
+    HEADLINE: "${strategy.headline}" 
+    SUBTEXT: "${strategy.subtext}"
+    CTA: "${strategy.cta}"
+    LAYOUT STYLE: ${strategy.layoutType}
+    COLOR PALETTE: ${strategy.colorPalette.join(', ')}
+    
+    STRICT TYPOGRAPHY REQUIREMENTS:
+    - You MUST render the following literal text exactly as written:
+      1. Headline: "${strategy.headline}"
+      2. Subtext: "${strategy.subtext}"
+      3. CTA: "${strategy.cta}"
+    - Integrate the text elegantly with premium, high-end typography.
+    - Keep the product from the uploaded image as the center focus.
+    
+    STRICT VISUAL REQUIREMENTS:
+    - Keep the product visible and do not distort it.
+    - The environment should look realistic, high-end, and cinematic.
+    - Lighting must be dramatic and premium.
+    - The final output must look like a real magazine or billboard ad.
+    - High resolution, commercial quality.
+    - Aspect ratio: 3:4 (vertical poster format).
+  `;
+
+  const parts: any[] = [];
+
+  // Add product images
+  if (productImages && productImages.length > 0) {
+    for (const base64 of productImages) {
+      const base64Data = base64.replace(/^data:image\/[a-z]+;base64,/, '');
+      parts.push({
+        inlineData: {
+          data: base64Data,
+          mimeType: 'image/jpeg',
+        }
+      });
+    }
+  }
+
+  // Add brand logo if available
+  if (brandLogo) {
+    const base64Data = brandLogo.replace(/^data:image\/[a-z]+;base64,/, '');
+    parts.push({
+      inlineData: {
+        data: base64Data,
+        mimeType: 'image/png',
+      }
+    });
+  }
+
+  parts.push({ text: prompt });
+
+  const response = await ai.models.generateContent({
+    model: 'models/gemini-2.0-flash',
+    contents: [{
+      role: 'user',
+      parts: parts,
+    }],
+    safetySettings: [
+      { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
+      { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
+      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
+      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
+    ],
+  } as any);
+
+  if (!response.candidates || response.candidates.length === 0) {
+    throw new Error('No candidates in API response');
+  }
+
+  const content = response.candidates[0].content;
+  if (!content || !content.parts || content.parts.length === 0) {
+    throw new Error('No content in API response');
+  }
+
+  const firstPart = content.parts[0];
+  if ('inlineData' in firstPart && firstPart.inlineData) {
+    const base64ImageBytes = firstPart.inlineData.data;
+    if (!base64ImageBytes) {
+      throw new Error('Image data is empty');
+    }
+    const mimeType = firstPart.inlineData.mimeType || 'image/jpeg';
+    return `data:${mimeType};base64,${base64ImageBytes}`;
+  }
+
+  throw new Error('No image was generated by the API');
+};
+
+/**
+ * Simple canvas-based poster generator as fallback
  */
 const generateCanvasPoster = async (params: PosterGenerationParams): Promise<string> => {
   const {
       brandName,
       description,
-      productImages,
-      brandLogo,
       aspectRatio,
       contactPhone,
       website,
       address,
   } = params;
 
-  // Parse aspect ratio
   const [widthRatio, heightRatio] = aspectRatio.split(':').map(Number);
   const baseHeight = 800;
   const baseWidth = Math.round((baseHeight * widthRatio) / heightRatio);
 
-  // Create a canvas programmatically using data URL
-  // Since we're in Node.js, we'll create a simple HTML canvas representation
-  // For production, this would use a library like canvas or sharp
-  
-  // Create a simple SVG-based poster as fallback
   const svgPoster = `
     <svg width="${baseWidth}" height="${baseHeight}" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -91,7 +224,6 @@ const generateCanvasPoster = async (params: PosterGenerationParams): Promise<str
     </svg>
   `;
 
-  // Convert SVG to base64
   const svgBase64 = Buffer.from(svgPoster).toString('base64');
   return `data:image/svg+xml;base64,${svgBase64}`;
 };
@@ -101,123 +233,48 @@ export const generatePoster = async (params: PosterGenerationParams): Promise<st
       brandName,
       description,
       productImages,
-      productUrl,
       brandLogo,
-      aspectRatio,
       posterType,
       festivalName,
-      contactPhone,
-      website,
-      address,
-      baseImage
   } = params;
 
   if (!process.env.GOOGLE_AI_API_KEY) {
     throw new Error("GOOGLE_AI_API_KEY environment variable not set");
   }
 
-  const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_AI_API_KEY });
-
-  // Generate the world-class prompt
-  const prompt = generateAIPrompt(
+  try {
+    console.log('Step 1: Analyzing brand strategy...');
+    
+    // Step 1: Analyze brand and get strategy
+    const industry = posterType === 'Festival' && festivalName ? `Festival & Events (${festivalName})` : 'Professional Services';
+    const strategy = await analyzeBrand(
       brandName,
       description,
-      productUrl,
-      productImages.length,
-      !!brandLogo,
-      posterType,
-      festivalName,
-      contactPhone,
-      website,
-      address,
-      aspectRatio
-  );
+      industry,
+      'English'
+    );
 
-  try {
-    console.log('Attempting to generate poster with Google Gemini API');
+    console.log('Step 2: Creating poster with strategy...');
     
-    // Use gemini-2.0-flash model for analyzing and describing the poster
-    // Build parts array for the request
-    const parts: any[] = [{ 
-      text: `${prompt}\n\nGenerate a detailed visual description for this poster that can be rendered. Include colors, layout, text positioning, and styling details.` 
-    }];
+    // Step 2: Create poster image
+    const productImagesBase64 = productImages && productImages.length > 0 
+      ? productImages.map(img => typeof img === 'string' ? img : (img as any).base64)
+      : [];
 
-    // Add product images if available
-    if (productImages && productImages.length > 0) {
-      for (const base64 of productImages) {
-        const base64Data = base64.replace(/^data:image\/[a-z]+;base64,/, '');
-        parts.push({
-          inlineData: {
-            data: base64Data,
-            mimeType: 'image/jpeg',
-          },
-        });
-      }
-    }
+    const posterUrl = await createPosterImage(
+      brandName,
+      strategy,
+      productImagesBase64,
+      typeof brandLogo === 'string' ? brandLogo : (brandLogo as any)?.base64 || null
+    );
 
-    // Add brand logo if available
-    if (brandLogo) {
-      const base64Data = brandLogo.replace(/^data:image\/[a-z]+;base64,/, '');
-      parts.push({
-        inlineData: {
-          data: base64Data,
-          mimeType: 'image/png',
-        },
-      });
-    }
-
-    const result = await ai.models.generateContent({
-      model: 'models/gemini-2.0-flash',
-      contents: [{
-        role: 'user',
-        parts: parts,
-      }],
-      safetySettings: [
-        {
-          category: 'HARM_CATEGORY_HARASSMENT',
-          threshold: 'BLOCK_ONLY_HIGH',
-        },
-        {
-          category: 'HARM_CATEGORY_HATE_SPEECH',
-          threshold: 'BLOCK_ONLY_HIGH',
-        },
-        {
-          category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-          threshold: 'BLOCK_ONLY_HIGH',
-        },
-        {
-          category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-          threshold: 'BLOCK_ONLY_HIGH',
-        },
-      ],
-    } as any);
-
-    console.log('Gemini API response received - generating poster from description');
-
-    // SAFE VALIDATION: Check if response exists
-    if (!result) {
-      console.warn('Empty API response, falling back to canvas-based poster');
-      return await generateCanvasPoster(params);
-    }
-
-    // SAFE VALIDATION: Check if candidates exist and have content
-    if (!result.candidates || result.candidates.length === 0) {
-      console.warn('No candidates in API response, falling back to canvas-based poster');
-      return await generateCanvasPoster(params);
-    }
-
-    // Log the response for debugging
-    console.log('Poster generation succeeded with AI description');
-    
-    // Since the API generated a description, we'll use the canvas fallback with that description
-    // In a production environment, you'd pass this description to an actual image generation service
-    return await generateCanvasPoster(params);
+    console.log('Poster generated successfully');
+    return posterUrl;
     
   } catch (apiError) {
-    console.error('AI generation error:', apiError);
-    console.warn('API failed, using canvas-based fallback poster generator');
+    console.error('API generation error:', apiError);
+    console.warn('Falling back to canvas-based poster generator');
     
-    // Use canvas-based generator as fallback
     try {
       return await generateCanvasPoster(params);
     } catch (fallbackError) {
