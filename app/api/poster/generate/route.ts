@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           {
             success: false,
-            message: 'Poster generation failed. Please try again with different inputs.'
+            message: 'We encountered a temporary issue while creating your poster. This sometimes happens due to API limitations. Please try again in a moment, or adjust your content slightly and we\'ll create an amazing poster for you!'
           },
           { status: 400 }
         );
@@ -131,11 +131,11 @@ export async function POST(request: NextRequest) {
     } catch (aiError) {
       console.error('AI generation error:', aiError);
       
-      // Return controlled error instead of crashing
+      // Return a polite, hopeful, and respectful message instead of technical error
       return NextResponse.json(
         {
           success: false,
-          message: 'Poster generation failed. Please try again with different inputs.'
+          message: 'We\'re having a temporary challenge creating your poster right now. This is usually brief and we\'re working to resolve it. Please try again shortly, or feel free to adjust your brand details and try once more. We\'re here to help you create something amazing!'
         },
         { status: 400 }
       );
