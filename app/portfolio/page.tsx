@@ -226,7 +226,7 @@ export default function Portfolio() {
               createdAt: item.createdAt,
             }));
             // Sort: pinned first, then by createdAt desc
-            formattedItems.sort((a, b) => {
+            formattedItems.sort((a: any, b: any) => {
               if (a.pinned && !b.pinned) return -1;
               if (!a.pinned && b.pinned) return 1;
               return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
