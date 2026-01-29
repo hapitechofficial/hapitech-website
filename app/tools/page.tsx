@@ -7,8 +7,8 @@ import BackButton from '@/components/BackButton';
 const tools = [
   {
     icon: Image,
-    title: 'AI Poster Generator',
-    description: 'Create stunning posters with AI',
+    title: 'hApItech Production Suite',
+    description: 'Cinematic poster creation for luxury & professional brands',
     status: 'Available',
     href: '/tools/poster-generator',
   },

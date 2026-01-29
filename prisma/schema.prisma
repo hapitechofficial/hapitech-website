@@ -126,6 +126,7 @@ model BlogPost {
   readTime  String   @default("5 min read")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  pinned    Boolean  @default(false)
 }
 
 model PortfolioItem {
@@ -136,5 +137,6 @@ model PortfolioItem {
   media     String   // URL to video or image
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  pinned    Boolean  @default(false)
 }
 

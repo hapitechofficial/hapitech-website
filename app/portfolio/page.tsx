@@ -222,7 +222,15 @@ export default function Portfolio() {
               type: item.type,
               media: item.media,
               isVideo: item.type.toLowerCase() === 'video',
+              pinned: !!item.pinned,
+              createdAt: item.createdAt,
             }));
+            // Sort: pinned first, then by createdAt desc
+            formattedItems.sort((a, b) => {
+              if (a.pinned && !b.pinned) return -1;
+              if (!a.pinned && b.pinned) return 1;
+              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
             setItems(formattedItems);
           }
         }
@@ -276,6 +284,9 @@ export default function Portfolio() {
                       <ImageIcon className="w-12 h-12 text-white opacity-80 group-hover:opacity-100 transition-opacity" />
                     </div>
                   </>
+                )}
+                {item.pinned && (
+                  <span className="absolute top-2 right-2 px-3 py-1 text-xs bg-orange text-white rounded-full font-semibold shadow">Pinned</span>
                 )}
               </div>
 

@@ -11,6 +11,7 @@ interface BlogPostInput {
   content: string
   author: string
   readTime: string
+  pinned?: boolean
 }
 
 export async function createBlogPost(data: BlogPostInput) {
@@ -25,6 +26,7 @@ export async function createBlogPost(data: BlogPostInput) {
         content: data.content,
         author: data.author || 'hApItech Team',
         readTime: data.readTime || '5 min read',
+        pinned: data.pinned ?? false,
       },
     })
 
@@ -53,6 +55,7 @@ export async function updateBlogPost(id: string, data: BlogPostInput) {
         content: data.content,
         author: data.author || 'hApItech Team',
         readTime: data.readTime || '5 min read',
+        pinned: data.pinned ?? false,
       },
     })
 

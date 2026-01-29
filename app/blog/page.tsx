@@ -99,7 +99,12 @@ const defaultBlogPosts: BlogPostType[] = [
 
 export default async function Blog() {
   const blogPosts = await getBlogPosts()
-  const postsToDisplay: BlogPostType[] = blogPosts.length > 0 ? blogPosts : defaultBlogPosts
+  // Sort: pinned first, then by date
+  let postsToDisplay: BlogPostType[] = blogPosts.length > 0 ? blogPosts : defaultBlogPosts
+  postsToDisplay = [
+    ...postsToDisplay.filter((p) => p.pinned),
+    ...postsToDisplay.filter((p) => !p.pinned),
+  ]
   return (
     <div className="min-h-screen bg-beige">
       <div className="max-w-6xl mx-auto px-4 py-16">
@@ -116,11 +121,14 @@ export default async function Blog() {
               key={post.id || post.slug}
               className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
             >
-              <div className="h-48 bg-gradient-to-br from-magenta to-orange flex items-center justify-center">
+              <div className="h-48 bg-gradient-to-br from-magenta to-orange flex items-center justify-center relative">
                 <div className="text-white text-center">
                   <div className="text-4xl font-bold">{new Date(post.createdAt).getDate()}</div>
                   <div className="text-sm uppercase">{new Date(post.createdAt).toLocaleDateString('en-US', { month: 'short' })}</div>
                 </div>
+                {post.pinned && (
+                  <span className="absolute top-2 right-2 px-3 py-1 text-xs bg-orange text-white rounded-full font-semibold shadow">Pinned</span>
+                )}
               </div>
               <div className="p-6">
                 <h2 className="text-xl font-semibold text-charcoal mb-3 hover:text-magenta transition-colors">

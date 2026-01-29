@@ -9,6 +9,7 @@ interface PortfolioItemInput {
   category: string
   type: string
   media: string
+  pinned?: boolean
 }
 
 export async function createPortfolioItem(data: PortfolioItemInput) {
@@ -21,6 +22,7 @@ export async function createPortfolioItem(data: PortfolioItemInput) {
         category: data.category,
         type: data.type,
         media: data.media,
+        pinned: data.pinned ?? false,
       },
     })
 
@@ -47,6 +49,7 @@ export async function updatePortfolioItem(
         category: data.category,
         type: data.type,
         media: data.media,
+        pinned: data.pinned ?? false,
       },
     })
 

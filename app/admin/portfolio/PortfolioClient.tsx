@@ -16,6 +16,7 @@ interface PortfolioItem {
   media: string
   createdAt: Date
   updatedAt: Date
+  pinned?: boolean
 }
 
 interface PortfolioClientProps {
@@ -38,6 +39,7 @@ export default function PortfolioClient({ initialItems }: PortfolioClientProps) 
     media: '',
     mediaFile: null as File | null,
     mediaPreview: '',
+    pinned: false,
   })
 
   const resetForm = () => {
@@ -47,6 +49,7 @@ export default function PortfolioClient({ initialItems }: PortfolioClientProps) 
       media: '',
       mediaFile: null,
       mediaPreview: '',
+      pinned: false,
     })
     setEditingId(null)
     setShowForm(false)
@@ -135,6 +138,7 @@ export default function PortfolioClient({ initialItems }: PortfolioClientProps) 
       media: item.media,
       mediaFile: null,
       mediaPreview: item.type.toLowerCase() === 'video' ? '' : item.media,
+      pinned: !!item.pinned,
     })
     setEditingId(item.id)
     setShowForm(true)
@@ -188,6 +192,7 @@ export default function PortfolioClient({ initialItems }: PortfolioClientProps) 
         type: formData.type,
         category: `${formData.type} Content`, // Auto-generate category
         media: mediaUrl,
+        pinned: formData.pinned,
       }
 
       let result
@@ -402,6 +407,19 @@ export default function PortfolioClient({ initialItems }: PortfolioClientProps) 
               </div>
             </div>
 
+            {/* Pin Toggle */}
+            <div>
+              <label className="inline-flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.pinned}
+                  onChange={e => setFormData({ ...formData, pinned: e.target.checked })}
+                  className="accent-magenta w-5 h-5"
+                />
+                <span className="text-sm font-semibold text-charcoal">Pin this item (show at top)</span>
+              </label>
+            </div>
+
             {/* Submit Buttons */}
             <div className="flex gap-4">
               <button
@@ -470,7 +488,12 @@ export default function PortfolioClient({ initialItems }: PortfolioClientProps) 
               </div>
 
               <div className="p-4">
-                <h3 className="font-bold text-charcoal mb-2">{item.title}</h3>
+                <h3 className="font-bold text-charcoal mb-2 flex items-center gap-2">
+                  {item.title}
+                  {item.pinned && (
+                    <span className="ml-2 px-2 py-1 text-xs bg-orange text-white rounded-full font-semibold">Pinned</span>
+                  )}
+                </h3>
                 <p className="text-xs text-gray-600 mb-3 bg-gray-100 inline-block px-2 py-1 rounded">
                   {item.type}
                 </p>

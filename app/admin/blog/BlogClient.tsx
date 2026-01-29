@@ -14,6 +14,7 @@ interface BlogPost {
   readTime: string
   createdAt: Date
   updatedAt: Date
+  pinned?: boolean
 }
 
 interface BlogClientProps {
@@ -34,6 +35,7 @@ export default function BlogClient({ initialPosts }: BlogClientProps) {
     content: '',
     author: 'hApItech Team',
     readTime: '5 min read',
+    pinned: false,
   })
 
   const resetForm = () => {
@@ -44,6 +46,7 @@ export default function BlogClient({ initialPosts }: BlogClientProps) {
       content: '',
       author: 'hApItech Team',
       readTime: '5 min read',
+      pinned: false,
     })
     setEditingId(null)
     setShowForm(false)
@@ -58,6 +61,7 @@ export default function BlogClient({ initialPosts }: BlogClientProps) {
       content: post.content,
       author: post.author,
       readTime: post.readTime,
+      pinned: !!post.pinned,
     })
     setEditingId(post.id)
     setShowForm(true)
@@ -137,6 +141,18 @@ export default function BlogClient({ initialPosts }: BlogClientProps) {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Pin Toggle */}
+            <div>
+              <label className="inline-flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.pinned}
+                  onChange={e => setFormData({ ...formData, pinned: e.target.checked })}
+                  className="accent-magenta w-5 h-5"
+                />
+                <span className="text-sm font-semibold text-charcoal">Pin this post (show at top)</span>
+              </label>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-charcoal mb-2">
@@ -275,7 +291,12 @@ export default function BlogClient({ initialPosts }: BlogClientProps) {
                 {posts.map((post) => (
                   <tr key={post.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 text-charcoal font-medium">
-                      {post.title}
+                          <h3 className="font-bold text-charcoal mb-2 flex items-center gap-2">
+                            {post.title}
+                            {post.pinned && (
+                              <span className="ml-2 px-2 py-1 text-xs bg-orange text-white rounded-full font-semibold">Pinned</span>
+                            )}
+                          </h3>
                     </td>
                     <td className="px-6 py-4 text-charcoal text-sm">
                       {post.slug}
