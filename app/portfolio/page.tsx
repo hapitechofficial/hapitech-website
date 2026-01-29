@@ -5,7 +5,17 @@ import { Play, Image as ImageIcon, Music } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 
 // Default portfolio items as fallback
-const defaultPortfolioItems = [
+type PortfolioItemType = {
+  id?: string;
+  type: string;
+  title: string;
+  category: string;
+  media: string;
+  isVideo: boolean;
+  pinned?: boolean;
+};
+
+const defaultPortfolioItems: PortfolioItemType[] = [
   // Diwali Festival Content
   {
     id: 'default-1',
