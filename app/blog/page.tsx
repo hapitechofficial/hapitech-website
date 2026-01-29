@@ -17,6 +17,7 @@ interface BlogPostType {
   content?: string
   readTime: string
   createdAt: Date | string
+  pinned?: boolean
 }
 
 async function getBlogPosts() {
