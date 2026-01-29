@@ -1,3 +1,4 @@
+"use client";
 import { useState } from 'react';
 import BrandForm from '@/components/poster-generator/BrandForm';
 import ProcessingView from '@/components/poster-generator/ProcessingView';
